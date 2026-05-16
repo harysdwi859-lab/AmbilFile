@@ -1,596 +1,1071 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ExoilD — File Portal</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<title>EXOILD // SECURE SYSTEM</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --red:#e01c2e; --red-dim:#8b0f1a; --red-glow:rgba(224,28,46,0.35);
-    --bg:#050505; --bg2:#0d0d0d; --border:rgba(224,28,46,0.25);
-    --text:#e8e0dc; --text-dim:#6b5e5e; --gold:#c9a84c;
+    --red: #cc0000;
+    --red-bright: #ff1a1a;
+    --red-dim: #660000;
+    --red-glow: rgba(204,0,0,0.4);
+    --black: #000000;
+    --dark: #080808;
+    --dark2: #0e0e0e;
+    --dark3: #141414;
+    --grey: #1a1a1a;
+    --grey2: #222;
+    --text: #cccccc;
+    --text-dim: #555;
+    --white: #f0f0f0;
+    --green: #00ff41;
+    --green-dim: #005c16;
+    --yellow: #ffcc00;
+    --orange: #ff8800;
   }
-  *{margin:0;padding:0;box-sizing:border-box;}
-  body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;min-height:100vh;overflow-x:hidden;}
-  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(224,28,46,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(224,28,46,0.04) 1px,transparent 1px);background-size:40px 40px;animation:gridDrift 20s linear infinite;pointer-events:none;z-index:0;}
-  @keyframes gridDrift{from{background-position:0 0}to{background-position:40px 40px}}
-  body::after{content:'';position:fixed;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--red),transparent);animation:scanLine 6s linear infinite;pointer-events:none;z-index:1;opacity:.5;}
-  @keyframes scanLine{from{top:-2px}to{top:100vh}}
-  .screen{position:relative;z-index:2;}
 
-  /* LOGIN */
-  #loginScreen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;}
-  .login-box{width:100%;max-width:420px;border:1px solid var(--border);background:linear-gradient(135deg,rgba(13,13,13,.97),rgba(20,5,5,.97));padding:48px 40px;position:relative;animation:boxIn .8s cubic-bezier(.16,1,.3,1) both;}
-  @keyframes boxIn{from{opacity:0;transform:translateY(30px) scale(.97)}to{opacity:1;transform:none}}
-  .login-box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--red),var(--gold),var(--red),transparent);animation:shimmer 3s ease-in-out infinite;}
-  .login-box::after{content:'';position:absolute;inset:0;box-shadow:0 0 60px var(--red-glow),inset 0 0 40px rgba(224,28,46,.03);pointer-events:none;}
-  @keyframes shimmer{0%,100%{opacity:.6}50%{opacity:1}}
-  .logo{text-align:center;margin-bottom:36px;}
-  .logo-name{font-family:'Bebas Neue',sans-serif;font-size:52px;letter-spacing:8px;background:linear-gradient(135deg,#fff 0%,var(--red) 50%,var(--gold) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1;}
-  .logo-sub{font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:4px;color:var(--text-dim);margin-top:4px;}
-  .divider{height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);margin:28px 0;}
-  .field-group{margin-bottom:20px;}
-  .field-label{font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:3px;color:var(--red);margin-bottom:8px;display:block;}
-  .field-input{width:100%;background:rgba(255,255,255,.03);border:1px solid rgba(224,28,46,.2);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:14px;padding:12px 16px;outline:none;letter-spacing:2px;transition:border-color .3s,box-shadow .3s,background .3s;}
-  .field-input:focus{border-color:var(--red);background:rgba(224,28,46,.05);box-shadow:0 0 20px rgba(224,28,46,.15);}
-  .field-input::placeholder{color:#3a2a2a;}
-  .btn-main{width:100%;padding:14px;background:linear-gradient(135deg,var(--red-dim),var(--red));border:none;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:4px;cursor:pointer;position:relative;overflow:hidden;transition:transform .2s,box-shadow .3s;margin-top:8px;}
-  .btn-main::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent,rgba(255,255,255,.1));transform:translateX(-100%);transition:transform .4s;}
-  .btn-main:hover::before{transform:translateX(100%);}
-  .btn-main:hover{box-shadow:0 0 30px var(--red-glow);transform:translateY(-1px);}
-  .error-msg{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--red);letter-spacing:2px;margin-top:12px;text-align:center;min-height:18px;}
-  .status-dot{width:6px;height:6px;border-radius:50%;background:var(--red);display:inline-block;animation:pulse 2s ease-in-out infinite;margin-right:6px;}
-  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+  * { margin: 0; padding: 0; box-sizing: border-box; }
 
-  /* DASHBOARD */
-  #dashboard{display:none;min-height:100vh;}
-  .topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;border-bottom:1px solid var(--border);background:rgba(13,13,13,.9);backdrop-filter:blur(10px);position:sticky;top:0;z-index:100;}
-  .topbar-logo{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:5px;background:linear-gradient(90deg,#fff,var(--red));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-  .topbar-user{font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--text-dim);display:flex;align-items:center;gap:16px;}
-  .user-badge{background:rgba(224,28,46,.1);border:1px solid var(--border);padding:4px 12px;font-size:11px;color:var(--red);letter-spacing:2px;}
-  .btn-logout{background:none;border:1px solid rgba(224,28,46,.3);color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:2px;padding:5px 12px;cursor:pointer;transition:all .2s;}
-  .btn-logout:hover{border-color:var(--red);color:var(--red);}
-  .main-content{padding:40px 32px;max-width:1100px;margin:0 auto;}
-  .section-header{display:flex;align-items:center;gap:12px;margin-bottom:32px;}
-  .section-title{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:5px;color:var(--text);}
-  .section-line{flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent);}
-  .breadcrumb{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:2px;margin-bottom:24px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
-  .bc-link{color:var(--red);cursor:pointer;}
-  .bc-link:hover{text-decoration:underline;}
-
-  /* FOLDER GRID */
-  .folder-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:16px;}
-  .folder-card{border:1px solid var(--border);background:linear-gradient(135deg,rgba(15,5,5,.8),rgba(20,10,10,.8));padding:28px 20px;cursor:pointer;text-align:center;position:relative;overflow:hidden;transition:transform .25s,border-color .25s,box-shadow .25s;animation:cardIn .5s cubic-bezier(.16,1,.3,1) both;}
-  .folder-card::before{content:'';position:absolute;top:0;left:-100%;right:100%;height:1px;background:linear-gradient(90deg,transparent,var(--red),transparent);transition:left .4s,right .4s;}
-  .folder-card:hover::before{left:0;right:0;}
-  .folder-card:hover{border-color:var(--red);box-shadow:0 0 25px rgba(224,28,46,.2);transform:translateY(-3px);}
-  @keyframes cardIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
-  .folder-icon{font-size:36px;margin-bottom:12px;display:block;}
-  .folder-name{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;color:var(--text);}
-  .folder-count{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim);margin-top:4px;letter-spacing:1px;}
-
-  /* FILE TABLE */
-  .file-table-header{display:grid;grid-template-columns:160px 1fr auto;padding:10px 16px;background:rgba(224,28,46,.08);border:1px solid var(--border);font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:2px;color:var(--text-dim);margin-bottom:2px;}
-  .file-row{display:grid;grid-template-columns:160px 1fr auto;align-items:center;padding:14px 16px;border:1px solid rgba(224,28,46,.1);border-top:none;background:rgba(10,5,5,.5);transition:background .2s,border-color .2s;animation:rowIn .4s cubic-bezier(.16,1,.3,1) both;cursor:pointer;}
-  .file-row:first-of-type{border-top:1px solid rgba(224,28,46,.1);}
-  .file-row:hover{background:rgba(224,28,46,.06);border-color:rgba(224,28,46,.3);}
-  @keyframes rowIn{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:none}}
-  .file-id{font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--red);letter-spacing:1px;}
-  .file-name-cell{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:500;}
-  .btn-dl{background:none;border:1px solid rgba(224,28,46,.4);color:var(--red);font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:2px;padding:6px 14px;cursor:pointer;transition:all .2s;white-space:nowrap;}
-  .btn-dl:hover{background:var(--red);color:#fff;box-shadow:0 0 15px var(--red-glow);}
-
-  /* LOADING SCREEN */
-  #loadingScreen{display:none;position:fixed;inset:0;z-index:999;background:#050505;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:20px;}
-  #loadingScreen.active{display:flex;}
-  .loading-img-wrap{width:340px;height:230px;overflow:hidden;border:1px solid var(--border);position:relative;margin-bottom:28px;box-shadow:0 0 50px var(--red-glow);}
-  .loading-img-wrap::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 55%,#050505 100%);pointer-events:none;}
-  .loading-img-wrap::before{content:'';position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(224,28,46,.6),transparent);animation:imgScan 2s linear infinite;z-index:2;}
-  @keyframes imgScan{from{top:0}to{top:100%}}
-  #loadingImg{width:100%;height:100%;object-fit:cover;transition:opacity .5s ease;}
-  .loading-tagline{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:4px;color:var(--text);text-align:center;margin-bottom:24px;}
-  .loading-tagline span{color:var(--red);}
-  .progress-wrap{width:340px;}
-  .progress-track{height:5px;background:rgba(224,28,46,.12);border:1px solid rgba(224,28,46,.2);position:relative;overflow:hidden;}
-  .progress-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--red-dim),var(--red),var(--gold));transition:width .4s linear;position:relative;}
-  .progress-fill::after{content:'';position:absolute;right:-1px;top:-3px;width:7px;height:11px;background:var(--gold);box-shadow:0 0 10px var(--gold);}
-  .progress-labels{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);margin-top:10px;display:flex;justify-content:space-between;letter-spacing:1px;}
-  #progressPct{color:var(--gold);font-size:13px;font-weight:bold;}
-  .loading-step{margin-top:16px;font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim);letter-spacing:3px;text-align:center;min-height:14px;animation:stepBlink 1s ease-in-out infinite;}
-  @keyframes stepBlink{0%,100%{opacity:1}50%{opacity:.4}}
-
-  /* MODALS */
-  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(6px);z-index:500;align-items:center;justify-content:center;padding:16px;}
-  .modal-overlay.open{display:flex;}
-  .modal-box{width:100%;max-width:460px;background:linear-gradient(135deg,#0d0505,#110808);border:1px solid var(--border);padding:36px 32px;position:relative;animation:modalIn .35s cubic-bezier(.16,1,.3,1) both;}
-  @keyframes modalIn{from{opacity:0;transform:scale(.93)}to{opacity:1;transform:none}}
-  .modal-box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--red),transparent);}
-  .modal-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:4px;margin-bottom:6px;}
-  .modal-subtitle{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:2px;margin-bottom:24px;}
-  .modal-close{position:absolute;top:16px;right:16px;background:none;border:none;color:var(--text-dim);font-size:20px;cursor:pointer;transition:color .2s;line-height:1;}
-  .modal-close:hover{color:var(--red);}
-  .file-info-card{border:1px solid var(--border);background:rgba(224,28,46,.04);padding:20px;margin-bottom:20px;}
-  .info-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(224,28,46,.1);}
-  .info-row:last-child{border-bottom:none;}
-  .info-key{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:2px;}
-  .info-val{font-size:14px;font-weight:600;color:var(--text);font-family:'Share Tech Mono',monospace;}
-  .info-val.hl{color:var(--red);}
-  .info-val.gd{color:var(--gold);}
-  .btn-dl-final{width:100%;padding:14px;background:linear-gradient(135deg,#8b0f1a,var(--red));border:none;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:box-shadow .3s,transform .2s;margin-top:8px;}
-  .btn-dl-final:hover{box-shadow:0 0 30px var(--red-glow);transform:translateY(-1px);}
-  .token-result-box{display:none;margin-top:16px;padding:16px;border:1px solid var(--border);background:rgba(224,28,46,.05);}
-  .tr-label{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim);letter-spacing:2px;margin-bottom:8px;}
-  .tr-token{font-family:'Share Tech Mono',monospace;font-size:18px;color:var(--gold);letter-spacing:4px;word-break:break-all;}
-  .tr-hint{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim);margin-top:8px;letter-spacing:1px;}
-
-  @media(max-width:600px){
-    .topbar{padding:12px 16px;}
-    .main-content{padding:24px 16px;}
-    .file-table-header,.file-row{grid-template-columns:1fr auto;}
-    .file-table-header .col-id,.file-row .file-id{display:none;}
-    .login-box{padding:32px 24px;}
-    .loading-img-wrap,.progress-wrap{width:90vw;}
+  body {
+    background: var(--black);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+    cursor: default;
   }
-  ::-webkit-scrollbar{width:4px;}
-  ::-webkit-scrollbar-track{background:var(--bg2);}
-  ::-webkit-scrollbar-thumb{background:var(--red-dim);}
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 2px,
+      rgba(0,0,0,0.05) 2px, rgba(0,0,0,0.05) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  .screen { display: none; min-height: 100vh; }
+  .screen.active { display: flex; flex-direction: column; }
+
+  /* ─── HEADER ─── */
+  .sys-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 32px;
+    background: linear-gradient(90deg, #000 0%, #0e0000 50%, #000 100%);
+    border-bottom: 1px solid var(--red-dim);
+    position: relative; overflow: hidden;
+  }
+  .sys-header::after {
+    content: '';
+    position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--red-bright), transparent);
+    animation: scanH 3s ease-in-out infinite;
+  }
+  @keyframes scanH { 0%,100% { opacity: 0.3; } 50% { opacity: 1; } }
+
+  .logo {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 22px; font-weight: 900; letter-spacing: 6px;
+    color: var(--red-bright);
+    text-shadow: 0 0 20px var(--red-glow), 0 0 40px var(--red-dim);
+    animation: flicker 5s infinite;
+  }
+  @keyframes flicker {
+    0%,95%,100% { opacity: 1; } 96% { opacity: 0.7; }
+    97% { opacity: 1; } 98% { opacity: 0.5; } 99% { opacity: 1; }
+  }
+
+  .sys-status {
+    font-size: 11px; color: var(--text-dim);
+    letter-spacing: 2px; text-align: right; line-height: 1.6;
+  }
+  .sys-status span { color: var(--red); }
+
+  /* ─── CORNER DECO ─── */
+  .corner-deco { position: fixed; pointer-events: none; z-index: 100; }
+  .corner-deco svg { width: 80px; height: 80px; }
+  .corner-tl { top: 0; left: 0; }
+  .corner-tr { top: 0; right: 0; transform: scaleX(-1); }
+  .corner-bl { bottom: 0; left: 0; transform: scaleY(-1); }
+  .corner-br { bottom: 0; right: 0; transform: scale(-1); }
+
+  /* ─── LOGIN ─── */
+  #loginScreen {
+    justify-content: center; align-items: center;
+    background: radial-gradient(ellipse at center, #0a0000 0%, #000 70%);
+    position: relative;
+  }
+  .login-wrap { width: 420px; position: relative; animation: fadeUp 0.8s ease forwards; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .login-frame {
+    border: 1px solid var(--red-dim);
+    background: linear-gradient(135deg, rgba(10,0,0,0.95), rgba(5,5,5,0.95));
+    padding: 48px 40px; position: relative;
+    box-shadow: 0 0 60px rgba(200,0,0,0.15), inset 0 0 40px rgba(100,0,0,0.05);
+  }
+  .login-frame::before {
+    content: ''; position: absolute; top: -1px; left: 20%; right: 20%;
+    height: 1px; background: linear-gradient(90deg, transparent, var(--red-bright), transparent);
+  }
+  .login-frame::after {
+    content: ''; position: absolute; bottom: -1px; left: 20%; right: 20%;
+    height: 1px; background: linear-gradient(90deg, transparent, var(--red-bright), transparent);
+  }
+  .login-badge { text-align: center; margin-bottom: 36px; }
+  .login-badge .title {
+    font-family: 'Orbitron', sans-serif; font-size: 28px; font-weight: 900;
+    color: var(--red-bright); letter-spacing: 8px;
+    text-shadow: 0 0 30px var(--red-glow); display: block;
+  }
+  .login-badge .sub {
+    font-size: 10px; letter-spacing: 4px; color: var(--text-dim);
+    margin-top: 6px; display: block;
+  }
+  .field-wrap { margin-bottom: 20px; }
+  .field-label { font-size: 10px; letter-spacing: 3px; color: var(--red-dim); margin-bottom: 6px; display: block; }
+  .field-input {
+    width: 100%; background: rgba(15,0,0,0.8);
+    border: 1px solid #330000; border-top-color: #550000;
+    color: var(--text); font-family: 'Share Tech Mono', monospace;
+    font-size: 14px; padding: 12px 14px; outline: none; transition: all 0.3s;
+  }
+  .field-input:focus { border-color: var(--red); box-shadow: 0 0 15px rgba(200,0,0,0.2), inset 0 0 10px rgba(100,0,0,0.1); }
+  .field-input::placeholder { color: #333; }
+  .btn-login {
+    width: 100%; margin-top: 10px;
+    background: linear-gradient(135deg, #1a0000, #330000);
+    border: 1px solid var(--red); color: var(--red-bright);
+    font-family: 'Orbitron', sans-serif; font-size: 12px; font-weight: 700;
+    letter-spacing: 4px; padding: 14px; cursor: pointer; transition: all 0.3s;
+    position: relative; overflow: hidden; text-transform: uppercase;
+  }
+  .btn-login::before {
+    content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(200,0,0,0.15), transparent); transition: 0.4s;
+  }
+  .btn-login:hover::before { left: 100%; }
+  .btn-login:hover { background: linear-gradient(135deg, #330000, #550000); box-shadow: 0 0 25px rgba(200,0,0,0.4); color: #fff; }
+  .btn-login:active { transform: scale(0.99); }
+  .login-error {
+    color: var(--red-bright); font-size: 11px; letter-spacing: 2px;
+    text-align: center; margin-top: 16px; height: 16px;
+  }
+  .login-grid {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background-image: linear-gradient(rgba(150,0,0,0.03) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(150,0,0,0.03) 1px, transparent 1px);
+    background-size: 40px 40px; pointer-events: none;
+  }
+
+  /* ─── DASHBOARD ─── */
+  #dashScreen { background: var(--dark); }
+  .dash-body { display: flex; flex: 1; overflow: hidden; }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 240px; min-height: 100%;
+    background: linear-gradient(180deg, #060000 0%, #000 100%);
+    border-right: 1px solid #1a0000;
+    padding: 24px 0; flex-shrink: 0; position: relative;
+    display: flex; flex-direction: column;
+  }
+  .sidebar::after {
+    content: ''; position: absolute; top: 0; right: 0; bottom: 0; width: 1px;
+    background: linear-gradient(180deg, transparent, var(--red-dim) 30%, var(--red-dim) 70%, transparent);
+  }
+  .sidebar-title { font-size: 9px; letter-spacing: 4px; color: var(--red-dim); padding: 0 24px 16px; border-bottom: 1px solid #150000; margin-bottom: 8px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 13px 24px; cursor: pointer; font-size: 13px; letter-spacing: 2px;
+    color: var(--text-dim); transition: all 0.2s; position: relative; user-select: none;
+  }
+  .nav-item::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
+    background: var(--red-bright); transform: scaleY(0); transition: 0.2s;
+  }
+  .nav-item:hover { color: var(--text); background: rgba(150,0,0,0.05); }
+  .nav-item:hover::before { transform: scaleY(1); }
+  .nav-item.active { color: var(--red-bright); background: rgba(150,0,0,0.08); }
+  .nav-item.active::before { transform: scaleY(1); }
+  .nav-item .nav-icon { font-size: 14px; width: 16px; text-align: center; }
+  .nav-item .nav-badge {
+    margin-left: auto; font-size: 9px; letter-spacing: 1px;
+    background: rgba(150,0,0,0.2); border: 1px solid var(--red-dim);
+    color: var(--red); padding: 2px 6px;
+  }
+  .nav-item.locked { opacity: 0.3; cursor: not-allowed; }
+  .nav-item.locked:hover { background: none; color: var(--text-dim); }
+  .nav-item.locked::before { transform: scaleY(0) !important; }
+
+  /* SIDEBAR BOTTOM INFO */
+  .sidebar-bottom {
+    margin-top: auto;
+    padding: 16px 24px 0;
+    border-top: 1px solid #150000;
+  }
+  .sb-access {
+    font-size: 9px; color: #1a0000; letter-spacing: 2px; line-height: 2;
+    margin-bottom: 14px;
+  }
+  .sb-clock-big {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 18px; font-weight: 700; color: var(--red-dim);
+    letter-spacing: 3px; text-shadow: 0 0 10px rgba(200,0,0,0.3);
+    margin-bottom: 6px;
+  }
+  .sb-date {
+    font-size: 9px; color: #2a0000; letter-spacing: 2px; margin-bottom: 14px;
+  }
+  .sb-info-row {
+    display: flex; flex-direction: column; gap: 5px;
+    padding: 10px 0; border-top: 1px solid #0f0000;
+  }
+  .sb-info-item {
+    font-size: 9px; letter-spacing: 1px; color: #333; line-height: 1.5;
+  }
+  .sb-info-item .sb-label { color: #1a0000; }
+  .sb-info-item .sb-val { color: #444; }
+  .sb-weather-big {
+    font-size: 11px; color: #3a0000; letter-spacing: 1px; margin-top: 6px;
+  }
+
+  /* MAIN CONTENT */
+  .main-content {
+    flex: 1; padding: 32px; overflow-y: auto;
+    background: radial-gradient(ellipse at top right, rgba(80,0,0,0.06) 0%, transparent 60%), var(--dark);
+  }
+  .page-header {
+    margin-bottom: 32px; padding-bottom: 16px;
+    border-bottom: 1px solid #1a0000;
+    display: flex; align-items: flex-end; gap: 16px;
+  }
+  .page-title { font-family: 'Orbitron', sans-serif; font-size: 20px; font-weight: 700; color: var(--white); letter-spacing: 4px; }
+  .page-path { font-size: 11px; color: var(--text-dim); letter-spacing: 2px; padding-bottom: 2px; }
+  .page-path span { color: var(--red); }
+
+  /* DOC LIST */
+  .doc-list { display: flex; flex-direction: column; gap: 12px; }
+  .doc-card {
+    background: linear-gradient(135deg, #0a0000, #0e0000);
+    border: 1px solid #220000; padding: 20px 24px;
+    display: flex; align-items: center; gap: 20px;
+    transition: all 0.3s; position: relative; overflow: hidden;
+  }
+  .doc-card::before {
+    content: ''; position: absolute; top: 0; left: 0; bottom: 0; width: 3px;
+    background: linear-gradient(180deg, var(--red-bright), var(--red-dim));
+  }
+  .doc-card:hover { border-color: var(--red-dim); box-shadow: 0 0 30px rgba(200,0,0,0.1); transform: translateX(2px); }
+  .doc-num { font-family: 'Orbitron', sans-serif; font-size: 11px; color: var(--red-dim); letter-spacing: 2px; min-width: 60px; }
+  .doc-info { flex: 1; }
+  .doc-name {
+    font-size: 14px; color: var(--white); letter-spacing: 1px;
+    cursor: pointer; display: inline-block; transition: all 0.2s;
+    border-bottom: 1px dashed #330000;
+  }
+  .doc-name:hover { color: var(--red-bright); border-bottom-color: var(--red-bright); text-shadow: 0 0 10px rgba(255,26,26,0.4); }
+  .doc-meta { font-size: 10px; color: var(--text-dim); margin-top: 4px; letter-spacing: 1px; }
+  .doc-hint { font-size: 9px; color: #2a0000; letter-spacing: 2px; margin-top: 6px; }
+
+  .btn-dl {
+    background: rgba(150,0,0,0.15); border: 1px solid var(--red-dim);
+    color: var(--red-bright); font-family: 'Share Tech Mono', monospace;
+    font-size: 11px; letter-spacing: 2px; padding: 9px 18px; cursor: pointer;
+    transition: all 0.3s; white-space: nowrap; text-transform: uppercase;
+  }
+  .btn-dl:hover { background: rgba(200,0,0,0.25); border-color: var(--red-bright); box-shadow: 0 0 15px rgba(200,0,0,0.3); }
+
+  /* EMPTY PAGE */
+  .empty-page {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    height: 300px; color: var(--text-dim); border: 1px dashed #1a0000;
+  }
+  .empty-icon { font-size: 40px; margin-bottom: 16px; opacity: 0.3; }
+  .empty-text { font-size: 11px; letter-spacing: 3px; }
+
+  /* ─── MODALS ─── */
+  .modal-bg {
+    display: none; position: fixed; top:0;left:0;right:0;bottom:0;
+    background: rgba(0,0,0,0.85); z-index: 1000;
+    justify-content: center; align-items: center;
+    backdrop-filter: blur(4px);
+  }
+  .modal-bg.open { display: flex; }
+
+  .modal {
+    width: 500px; max-width: 95vw;
+    background: linear-gradient(135deg, #0a0000, #070707);
+    border: 1px solid var(--red-dim);
+    box-shadow: 0 0 80px rgba(200,0,0,0.2), 0 0 2px var(--red-dim);
+    animation: modalIn 0.3s ease; position: relative; overflow: hidden;
+  }
+  @keyframes modalIn {
+    from { opacity: 0; transform: scale(0.95) translateY(-10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  .modal::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--red-bright), transparent);
+  }
+  .modal-header {
+    padding: 20px 24px; border-bottom: 1px solid #1a0000;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .modal-title { font-family: 'Orbitron', sans-serif; font-size: 13px; letter-spacing: 3px; color: var(--red-bright); }
+  .modal-close {
+    background: none; border: none; color: var(--text-dim);
+    font-size: 18px; cursor: pointer; padding: 0 4px;
+    transition: color 0.2s; font-family: monospace; line-height: 1;
+  }
+  .modal-close:hover { color: var(--red-bright); }
+  .modal-body { padding: 24px; }
+
+  /* FILE DETAIL */
+  .file-detail { display: none; }
+  .file-detail.show { display: block; }
+  .detail-grid { background: rgba(5,0,0,0.8); border: 1px solid #1a0000; padding: 20px; margin-bottom: 20px; }
+  .detail-row { display: flex; gap: 16px; padding: 9px 0; border-bottom: 1px solid #0f0000; font-size: 12px; }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-key { color: var(--red-dim); letter-spacing: 2px; min-width: 100px; font-size: 10px; padding-top: 1px; }
+  .detail-val { color: var(--white); letter-spacing: 1px; }
+  .btn-download {
+    width: 100%;
+    background: linear-gradient(135deg, #220000, #3a0000);
+    border: 1px solid var(--red-bright); color: #fff;
+    font-family: 'Orbitron', monospace; font-size: 12px; font-weight: 700;
+    letter-spacing: 5px; padding: 16px; cursor: pointer; transition: all 0.3s;
+    text-transform: uppercase; position: relative; overflow: hidden;
+  }
+  .btn-download::before {
+    content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,50,50,0.2), transparent); transition: 0.5s;
+  }
+  .btn-download:hover::before { left: 100%; }
+  .btn-download:hover { box-shadow: 0 0 35px rgba(255,30,30,0.4); background: linear-gradient(135deg, #3a0000, #550000); }
+
+  /* ─── TERMINAL MODAL ─── */
+  .terminal-modal {
+    width: 680px; max-width: 96vw;
+    background: #000;
+    border: 1px solid #003300;
+    box-shadow: 0 0 80px rgba(0,255,65,0.12), 0 0 2px #003300;
+    animation: modalIn 0.3s ease;
+    position: relative; overflow: hidden;
+    font-family: 'Share Tech Mono', monospace;
+  }
+  .terminal-modal::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--green), transparent);
+    animation: scanH 2s ease-in-out infinite;
+  }
+
+  .term-titlebar {
+    background: #0a0a0a;
+    border-bottom: 1px solid #003300;
+    padding: 10px 16px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .term-dot { width: 11px; height: 11px; border-radius: 50%; }
+  .term-dot.r { background: #ff5f56; }
+  .term-dot.y { background: #ffbd2e; }
+  .term-dot.g { background: #27c93f; }
+  .term-label {
+    flex: 1; text-align: center; font-size: 11px; color: #333; letter-spacing: 3px;
+  }
+  .term-timer { font-size: 11px; color: var(--red-bright); letter-spacing: 2px; font-weight: bold; }
+
+  .term-body {
+    padding: 16px 20px;
+    min-height: 320px;
+    max-height: 460px;
+    overflow-y: auto;
+    font-size: 13px;
+    line-height: 1.85;
+    color: var(--green);
+  }
+
+  .tl { display: block; animation: fadeIn 0.12s ease; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .tl-red    { color: var(--red-bright); }
+  .tl-green  { color: var(--green); }
+  .tl-yellow { color: var(--yellow); }
+  .tl-orange { color: var(--orange); }
+  .tl-dim    { color: #444; }
+  .tl-white  { color: #ccc; }
+
+  .term-cursor {
+    display: inline-block; width: 8px; height: 14px;
+    background: var(--green); vertical-align: middle;
+    animation: cursorBlink 0.8s step-end infinite; margin-left: 2px;
+  }
+  @keyframes cursorBlink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+
+  /* Input line inside terminal */
+  .term-input-line {
+    display: flex; align-items: center; gap: 0;
+    padding: 4px 0;
+  }
+  .term-input-prompt { color: var(--green); white-space: nowrap; }
+  .term-text-input {
+    background: transparent; border: none; outline: none;
+    color: var(--green); font-family: 'Share Tech Mono', monospace;
+    font-size: 13px; flex: 1; caret-color: var(--green);
+    letter-spacing: 1px;
+  }
+
+  /* ─── STATUS BAR ─── */
+  .status-bar {
+    padding: 6px 32px; background: #000;
+    border-top: 1px solid #150000;
+    display: flex; align-items: center; gap: 24px;
+    font-size: 10px; color: var(--text-dim); letter-spacing: 1px;
+    flex-wrap: wrap;
+  }
+  .status-bar .s-item { display: flex; align-items: center; gap: 6px; }
+
+  .status-right {
+    margin-left: auto;
+    display: flex; align-items: center; gap: 20px;
+    flex-wrap: wrap;
+  }
+  .s-info { font-size: 10px; color: #333; letter-spacing: 1px; }
+  .s-info span { color: var(--text-dim); }
+
+  .pulse-dot {
+    display: inline-block; width: 6px; height: 6px;
+    background: var(--red-bright); border-radius: 50%;
+    animation: pulseDot 1.5s ease-in-out infinite;
+  }
+  @keyframes pulseDot {
+    0%,100% { box-shadow: 0 0 0 0 rgba(200,0,0,0.5); }
+    50% { box-shadow: 0 0 0 6px rgba(200,0,0,0); }
+  }
+
+  .cursor {
+    display: inline-block; width: 8px; height: 14px;
+    background: var(--red-bright); vertical-align: middle;
+    animation: cursorBlink 1s step-end infinite;
+  }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: #000; }
+  ::-webkit-scrollbar-thumb { background: var(--red-dim); }
+  .term-body::-webkit-scrollbar-thumb { background: var(--green-dim); }
 </style>
 </head>
 <body>
 
-<!-- LOGIN -->
-<div id="loginScreen" class="screen">
-  <div class="login-box">
-    <div class="logo">
-      <div class="logo-name">ExoilD</div>
-      <div class="logo-sub">SECURE FILE PORTAL</div>
-    </div>
-    <div class="divider"></div>
-    <div class="field-group">
-      <label class="field-label">▸ NAMA AKUN</label>
-      <input class="field-input" id="inputUser" type="text" placeholder="MASUKKAN AKUN" autocomplete="off">
-    </div>
-    <div class="field-group">
-      <label class="field-label">▸ SANDI</label>
-      <input class="field-input" id="inputPass" type="password" placeholder="••••••••••">
-    </div>
-    <button class="btn-main" onclick="doLogin()">AKSES PORTAL</button>
-    <div class="error-msg" id="loginError"></div>
-    <div style="margin-top:24px;text-align:center;">
-      <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#2a1515;letter-spacing:2px;">
-        <span class="status-dot"></span>SYSTEM ONLINE — v2.4.1
-      </span>
-    </div>
-  </div>
+<!-- CORNERS -->
+<div class="corner-deco corner-tl">
+  <svg viewBox="0 0 80 80" fill="none"><path d="M0 0 L30 0 L30 2 L2 2 L2 30 L0 30 Z" fill="#660000" opacity="0.8"/><path d="M0 0 L16 0 L16 1 L1 1 L1 16 L0 16 Z" fill="#cc0000" opacity="0.6"/></svg>
+</div>
+<div class="corner-deco corner-tr">
+  <svg viewBox="0 0 80 80" fill="none"><path d="M0 0 L30 0 L30 2 L2 2 L2 30 L0 30 Z" fill="#660000" opacity="0.8"/><path d="M0 0 L16 0 L16 1 L1 1 L1 16 L0 16 Z" fill="#cc0000" opacity="0.6"/></svg>
+</div>
+<div class="corner-deco corner-bl">
+  <svg viewBox="0 0 80 80" fill="none"><path d="M0 0 L30 0 L30 2 L2 2 L2 30 L0 30 Z" fill="#660000" opacity="0.8"/></svg>
+</div>
+<div class="corner-deco corner-br">
+  <svg viewBox="0 0 80 80" fill="none"><path d="M0 0 L30 0 L30 2 L2 2 L2 30 L0 30 Z" fill="#660000" opacity="0.8"/></svg>
 </div>
 
-<!-- DASHBOARD -->
-<div id="dashboard" class="screen">
-  <div class="topbar">
-    <div class="topbar-logo">ExoilD</div>
-    <div class="topbar-user">
-      <span class="user-badge">⬡ <span id="displayUser">USER</span></span>
-      <button class="btn-logout" onclick="doLogout()">KELUAR ✕</button>
-    </div>
+<!-- ══════════════════ LOGIN ══════════════════ -->
+<div id="loginScreen" class="screen active">
+  <div class="login-grid"></div>
+  <div class="sys-header">
+    <div class="logo">EXOILD</div>
+    <div class="sys-status">SYS_STATUS: <span>ONLINE</span><br><span id="loginClock">--:--:--</span></div>
   </div>
-  <div class="main-content">
-    <div class="breadcrumb" id="breadcrumb"></div>
-    <div class="section-header">
-      <div class="section-title" id="sectionTitle">PROJECT</div>
-      <div class="section-line"></div>
-    </div>
-    <div id="folderView"><div class="folder-grid" id="folderGrid"></div></div>
-    <div id="fileView" style="display:none;">
-      <div class="file-table-header">
-        <div class="col-id">FILE ID</div>
-        <div>NAMA FILE</div>
-        <div>AKSI</div>
+
+  <div style="flex:1;display:flex;justify-content:center;align-items:center;">
+    <div class="login-wrap">
+      <div style="text-align:center;margin-bottom:24px;">
+        <span style="font-size:9px;letter-spacing:5px;color:#330000;">[ AUTHENTICATION REQUIRED ]</span>
       </div>
-      <div id="fileList"></div>
-      <div id="emptyMsg" style="display:none;text-align:center;padding:40px;font-family:'Share Tech Mono',monospace;font-size:12px;color:#3a2020;letter-spacing:2px;">— FOLDER KOSONG —</div>
+      <div class="login-frame">
+        <div class="login-badge">
+          <span class="title">EXOILD</span>
+          <span class="sub">SECURE FILE MANAGEMENT SYSTEM v2.4</span>
+        </div>
+        <div class="field-wrap">
+          <label class="field-label">▸ AKUN / IDENTIFIER</label>
+          <input class="field-input" id="loginUser" type="text" placeholder="enter access id..." autocomplete="off">
+        </div>
+        <div class="field-wrap">
+          <label class="field-label">▸ SANDI / PASSKEY</label>
+          <input class="field-input" id="loginPass" type="password" placeholder="••••••••••••">
+        </div>
+        <button class="btn-login" id="loginBtn">► AUTHENTICATE</button>
+        <div class="login-error" id="loginError"></div>
+      </div>
+      <div style="text-align:center;margin-top:16px;font-size:9px;color:#222;letter-spacing:3px;">UNAUTHORIZED ACCESS IS PROHIBITED</div>
+    </div>
+  </div>
+
+  <div class="status-bar">
+    <div class="s-item"><span class="pulse-dot"></span> SYSTEM ACTIVE</div>
+    <div class="s-item">PROTOCOL: AES-256</div>
+    <div class="status-right">
+      <div class="s-info">IP: <span id="loginIp">...</span></div>
+      <div class="s-info">LOC: <span id="loginLoc">...</span></div>
+      <div class="s-info">☁ <span id="loginWeather">...</span></div>
     </div>
   </div>
 </div>
 
-<!-- LOADING SCREEN -->
-<div id="loadingScreen">
-  <div class="loading-img-wrap">
-    <img id="loadingImg" src="" alt="" style="opacity:0;">
+<!-- ══════════════════ DASHBOARD ══════════════════ -->
+<div id="dashScreen" class="screen">
+  <div class="sys-header">
+    <div class="logo">EXOILD</div>
+    <div class="sys-status">SESSION: <span id="sessionUser">—</span><br><span id="dashClock">--:--:--</span></div>
   </div>
-  <div class="loading-tagline">Sabar ya bang, <span>Nih liat dulu~</span></div>
-  <div class="progress-wrap">
-    <div class="progress-track">
-      <div class="progress-fill" id="progressFill"></div>
-    </div>
-    <div class="progress-labels">
-      <span id="progressStep">MEMPROSES...</span>
-      <span id="progressPct">0%</span>
+
+  <div class="dash-body">
+    <nav class="sidebar">
+      <div class="sidebar-title">▸ MY PROJECT</div>
+      <div class="nav-item active" id="nav-doc" onclick="showPage('doc')">
+        <span class="nav-icon">📄</span><span>DOC</span>
+        <span class="nav-badge">1</span>
+      </div>
+      <div class="nav-item locked" id="nav-edit">
+        <span class="nav-icon">✏️</span><span>EDIT</span>
+        <span class="nav-badge" style="color:#222;border-color:#1a1a1a;">—</span>
+      </div>
+      <div class="nav-item locked" id="nav-coding">
+        <span class="nav-icon">⌨</span><span>CODING</span>
+        <span class="nav-badge" style="color:#222;border-color:#1a1a1a;">—</span>
+      </div>
+      <div class="nav-item locked" id="nav-virus">
+        <span class="nav-icon">⚠</span><span>VIRUS</span>
+        <span class="nav-badge" style="color:#222;border-color:#1a1a1a;">—</span>
+      </div>
+
+      <!-- BOTTOM INFO -->
+      <div class="sidebar-bottom">
+        <div class="sb-access">
+          ACCESS LEVEL: STANDARD<br>CLEARANCE: DELTA-1
+        </div>
+        <div class="sb-clock-big" id="sbClock">--:--:--</div>
+        <div class="sb-date" id="sbDate">--- -- ----</div>
+        <div class="sb-info-row">
+          <div class="sb-info-item"><span class="sb-label">IP ▸ </span><span class="sb-val" id="sbIp">...</span></div>
+          <div class="sb-info-item"><span class="sb-label">LOC ▸ </span><span class="sb-val" id="sbLoc">...</span></div>
+          <div class="sb-weather-big" id="sbWeather">☁ ...</div>
+        </div>
+      </div>
+    </nav>
+
+    <main class="main-content">
+      <div id="page-doc">
+        <div class="page-header">
+          <div class="page-title">DOC</div>
+          <div class="page-path">MY PROJECT / <span>DOCUMENTS</span></div>
+        </div>
+        <div class="doc-list" id="docList">
+          <div style="font-size:11px;color:#333;letter-spacing:2px;">Loading files... <span class="cursor"></span></div>
+        </div>
+      </div>
+      <div id="page-edit" style="display:none;">
+        <div class="page-header"><div class="page-title">EDIT</div><div class="page-path">MY PROJECT / <span>EDIT</span></div></div>
+        <div class="empty-page"><div class="empty-icon">🔒</div><div class="empty-text">ACCESS RESTRICTED — NO FILES</div></div>
+      </div>
+      <div id="page-coding" style="display:none;">
+        <div class="page-header"><div class="page-title">CODING</div><div class="page-path">MY PROJECT / <span>CODING</span></div></div>
+        <div class="empty-page"><div class="empty-icon">🔒</div><div class="empty-text">ACCESS RESTRICTED — NO FILES</div></div>
+      </div>
+      <div id="page-virus" style="display:none;">
+        <div class="page-header"><div class="page-title">VIRUS</div><div class="page-path">MY PROJECT / <span>VIRUS</span></div></div>
+        <div class="empty-page"><div class="empty-icon">🔒</div><div class="empty-text">ACCESS RESTRICTED — NO FILES</div></div>
+      </div>
+    </main>
+  </div>
+
+  <div class="status-bar">
+    <div class="s-item"><span class="pulse-dot"></span> CONNECTED</div>
+    <div class="s-item">ENC: AES-256</div>
+    <div class="s-item" id="statusMsg" style="color:#333;">SYSTEM NOMINAL</div>
+    <div class="status-right">
+      <div class="s-info">IP: <span id="dashIp">...</span></div>
+      <div class="s-info">LOC: <span id="dashLoc">...</span></div>
+      <div class="s-info">☁ <span id="dashWeather">...</span></div>
     </div>
   </div>
-  <div class="loading-step" id="loadingStepMsg">MENGAMANKAN KONEKSI...</div>
 </div>
 
-<!-- MODAL: File ID → Token -->
-<div class="modal-overlay" id="modalFileId">
-  <div class="modal-box">
-    <button class="modal-close" onclick="closeModal('modalFileId')">✕</button>
-    <div class="modal-title">VERIFIKASI FILE ID</div>
-    <div class="modal-subtitle">MASUKKAN FILE ID UNTUK MENDAPATKAN TOKEN</div>
-    <div class="field-group">
-      <label class="field-label">▸ FILE ID</label>
-      <input class="field-input" id="inputFileId" type="text" placeholder="MASUKKAN FILE ID" autocomplete="off">
+<!-- ══════════════════ FILE INFO MODAL (klik nama file) ══════════════════ -->
+<div class="modal-bg" id="fileInfoModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">FILE INFORMATION</span>
+      <button class="modal-close" onclick="closeModal('fileInfoModal')">✕</button>
     </div>
-    <button class="btn-main" onclick="verifyFileId()">DAPATKAN TOKEN</button>
-    <div class="error-msg" id="fileIdError"></div>
-    <div class="token-result-box" id="tokenResultBox">
-      <div class="tr-label">TOKEN ANDA:</div>
-      <div class="tr-token" id="tokenDisplay"></div>
-      <div class="tr-hint">Gunakan token ini saat mengunduh file.</div>
+    <div class="modal-body">
+      <div style="font-size:10px;color:#333;letter-spacing:2px;margin-bottom:20px;line-height:1.8;">
+        ► FILE METADATA &amp; ACCESS TOKEN:
+      </div>
+      <div class="detail-grid">
+        <div class="detail-row"><div class="detail-key">FILE NAME</div><div class="detail-val" id="infoFileName">—</div></div>
+        <div class="detail-row"><div class="detail-key">CLIENT</div><div class="detail-val" id="infoClient">—</div></div>
+        <div class="detail-row"><div class="detail-key">PEMBUAT</div><div class="detail-val">ExoilD</div></div>
+        <div class="detail-row"><div class="detail-key">TYPE</div><div class="detail-val">DOC</div></div>
+        <div class="detail-row">
+          <div class="detail-key">TOKEN</div>
+          <div class="detail-val" style="display:flex;align-items:center;gap:10px;">
+            <span id="infoToken" style="letter-spacing:3px;color:var(--red-bright);">—</span>
+            <span id="copyTokenBtn" onclick="copyToken()" style="font-size:9px;color:#330000;cursor:pointer;border:1px solid #2a0000;padding:2px 8px;letter-spacing:2px;transition:all 0.2s;" onmouseover="this.style.color='var(--red-bright)';this.style.borderColor='var(--red-dim)'" onmouseout="this.style.color='#330000';this.style.borderColor='#2a0000'">COPY</span>
+          </div>
+        </div>
+      </div>
+      <button class="btn-download" onclick="closeModal('fileInfoModal');openDownloadTerminal()">► PROCEED TO DOWNLOAD</button>
     </div>
   </div>
 </div>
 
-<!-- MODAL: Token → File Info -->
-<div class="modal-overlay" id="modalToken">
-  <div class="modal-box">
-    <button class="modal-close" onclick="closeModal('modalToken')">✕</button>
-    <div class="modal-title">TOKEN AKSES</div>
-    <div class="modal-subtitle">MASUKKAN KODE TOKEN UNTUK MENGAKSES FILE</div>
-    <div class="field-group">
-      <label class="field-label">▸ FILE</label>
-      <div id="tokenFileName" style="font-family:'Share Tech Mono',monospace;font-size:13px;color:var(--gold);padding:10px 0;"></div>
+<!-- ══════════════════ TERMINAL MODAL ══════════════════ -->
+<div class="modal-bg" id="terminalModal">
+  <div class="terminal-modal">
+    <div class="term-titlebar">
+      <div class="term-dot r"></div>
+      <div class="term-dot y"></div>
+      <div class="term-dot g"></div>
+      <div class="term-label" id="termLabel">exoild@secure-terminal — bash</div>
+      <div class="term-timer" id="termTimer"></div>
     </div>
-    <div class="field-group">
-      <label class="field-label">▸ KODE TOKEN</label>
-      <input class="field-input" id="inputToken" type="text" placeholder="MASUKKAN TOKEN" autocomplete="off">
-    </div>
-    <button class="btn-main" onclick="verifyToken()">VERIFIKASI TOKEN</button>
-    <div class="error-msg" id="tokenError"></div>
-  </div>
-</div>
-
-<!-- MODAL: File Info + Download -->
-<div class="modal-overlay" id="modalFileInfo">
-  <div class="modal-box">
-    <button class="modal-close" onclick="closeModal('modalFileInfo')">✕</button>
-    <div class="modal-title">INFO FILE</div>
-    <div class="modal-subtitle" id="fileInfoSub">DETAIL & UNDUH</div>
-    <div class="file-info-card">
-      <div class="info-row"><span class="info-key">NAMA FILE</span><span class="info-val" id="fi-name">—</span></div>
-      <div class="info-row"><span class="info-key">SANDI FILE</span><span class="info-val hl" id="fi-pass">—</span></div>
-      <div class="info-row"><span class="info-key">HARGA</span><span class="info-val gd" id="fi-price">—</span></div>
-      <div class="info-row"><span class="info-key">PEMBUAT</span><span class="info-val">ExoilD</span></div>
-    </div>
-    <button class="btn-dl-final" id="btnFinalDl" onclick="startLoading()">↓ DOWNLOAD FILE</button>
+    <div class="term-body" id="termBody"></div>
   </div>
 </div>
 
 <script>
+// ══════════════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════════════
 const SHEET_ID = '1MIdL7TWjkVBzQtixEX5P2cVUFuiBV516-EpLZbFbYTM';
-const CSV_FILES = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
-const CSV_AKUN  = CSV_FILES; // Akun di Sheet1 kolom G & H
+const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
 
-const FOLDERS = [
-  {id:'DOC',    icon:'📄', label:'DOC'},
-  {id:'JOKI',   icon:'🎮', label:'JOKI'},
-  {id:'CODING', icon:'💻', label:'CODING'},
-  {id:'SCRIPT', icon:'📜', label:'SCRIPT'},
-  {id:'EDIT',   icon:'🎬', label:'EDIT'},
-];
+let sheetData = null;
+let geoData = { ip:'...', loc:'...', weather:'...', city:'', lat:0, lon:0 };
 
-const CECAN_APIS = [
-  'https://api.siputzx.my.id/api/r/cecan/japan',
-  'https://api.siputzx.my.id/api/r/cecan/china',
-];
-
-let akunRows  = [];
-let fileRows  = [];
-let currentUser = '';
-let currentFile = null;
-let ldTimer = null, imgTimer = null;
-
-// Buang semua karakter invisible/whitespace tersembunyi
-function clean(s) {
-  return String(s || '').replace(/[\r\n\t\u00a0\ufeff\u200b]/g, '').trim();
-}
-
-function parseCSV(text) {
-  const lines = text.trim().split('\n');
-  return lines.map(line => {
-    const cols = []; let cur = ''; let inQ = false;
-    for (const c of line) {
-      if (c === '"') { inQ = !inQ; }
-      else if (c === ',' && !inQ) { cols.push(clean(cur)); cur = ''; }
-      else { cur += c; }
-    }
-    cols.push(clean(cur));
-    return cols;
+// ══════════════════════════════════════════════
+// CLOCKS
+// ══════════════════════════════════════════════
+function updateClocks() {
+  const now = new Date();
+  const t = now.toLocaleTimeString('en-GB', { hour12: false });
+  const d = now.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' }).toUpperCase();
+  ['loginClock','dashClock'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = t;
   });
+  const sb = document.getElementById('sbClock');
+  if (sb) sb.textContent = t;
+  const sbd = document.getElementById('sbDate');
+  if (sbd) sbd.textContent = d;
 }
+setInterval(updateClocks, 1000);
+updateClocks();
 
-async function fetchAkun() {
+// ══════════════════════════════════════════════
+// GEO + WEATHER
+// ══════════════════════════════════════════════
+async function loadNetworkInfo() {
   try {
-    const r = await fetch(CSV_AKUN);
-    const t = await r.text();
-    const rows = parseCSV(t);
-    // Sheet1 kolom G(6) = Akun, H(7) = Sandi — skip header baris 0
-    akunRows = rows.slice(1).map(c => ({
-      akun:  clean(c[6]),
-      sandi: clean(c[7]),
-    })).filter(r => r.akun);
+    const r = await fetch('https://ip-api.com/json/?fields=status,query,city,regionName,country,lat,lon,district');
+    const d = await r.json();
+    if (d.status === 'success') {
+      geoData.ip = d.query;
+      // Kecamatan level: pakai district kalau ada, fallback ke city
+      const area = d.district ? `${d.district}, ${d.city}` : `${d.city}, ${d.regionName}`;
+      geoData.loc = area;
+      geoData.lat = d.lat; geoData.lon = d.lon;
+
+      setInfo('loginIp', d.query);  setInfo('dashIp', d.query);  setInfo('sbIp', d.query);
+      setInfo('loginLoc', area);    setInfo('dashLoc', area);     setInfo('sbLoc', area);
+
+      // Weather
+      const wr = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${d.lat}&longitude=${d.lon}&current_weather=true`);
+      const wd = await wr.json();
+      if (wd.current_weather) {
+        const temp = wd.current_weather.temperature;
+        const desc = wmoCode(wd.current_weather.weathercode);
+        const wstr = `${desc} ${temp}°C`;
+        geoData.weather = wstr;
+        setInfo('loginWeather', wstr); setInfo('dashWeather', wstr); setInfo('sbWeather', '☁ ' + wstr);
+      }
+    }
   } catch(e) {
-    akunRows = [];
+    ['loginIp','dashIp','sbIp'].forEach(id => setInfo(id, 'N/A'));
+    ['loginLoc','dashLoc','sbLoc'].forEach(id => setInfo(id, 'UNKNOWN'));
+    ['loginWeather','dashWeather'].forEach(id => setInfo(id, '—'));
+    setInfo('sbWeather', '☁ —');
   }
 }
 
-async function fetchFiles() {
+function setInfo(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+
+function wmoCode(code) {
+  if (code === 0) return '☀ CLEAR';
+  if (code <= 3) return '⛅ CLOUDY';
+  if (code <= 9) return '🌫 FOGGY';
+  if (code <= 29) return '🌧 RAIN';
+  if (code <= 49) return '🌫 FOG';
+  if (code <= 69) return '🌧 RAIN';
+  if (code <= 79) return '❄ SNOW';
+  if (code <= 84) return '🌧 SHOWERS';
+  if (code <= 94) return '⛈ STORM';
+  return '⚡ THUNDER';
+}
+
+loadNetworkInfo();
+
+// ══════════════════════════════════════════════
+// FETCH SHEET DATA
+// ══════════════════════════════════════════════
+async function fetchSheetData() {
   try {
-    const r = await fetch(CSV_FILES);
-    const t = await r.text();
-    const rows = parseCSV(t);
-    // Skip baris 0 (header: File_id, Token, File_Name, Sandi, file, Harga)
-    fileRows = rows.slice(1).map(c => ({
-      fileId:    clean(c[0]),
-      token:     clean(c[1]),
-      fileName:  clean(c[2]),
-      sandiFile: clean(c[3]),
-      folder:    clean(c[4]).toUpperCase(),
-      harga:     clean(c[5]),
-      link:      '',
-    })).filter(r => r.fileId);
+    const resp = await fetch(CSV_URL);
+    const text = await resp.text();
+    const rows = text.trim().split('\n').map(r => {
+      const cols = []; let cur = '', inQ = false;
+      for (let c of r) {
+        if (c === '"') { inQ = !inQ; }
+        else if (c === ',' && !inQ) { cols.push(cur.trim()); cur = ''; }
+        else cur += c;
+      }
+      cols.push(cur.trim()); return cols;
+    });
+    // Row 1 = header, row 2 (index 1) = data
+    // Col: A=akun B=sandi C=? D=token E=fileName F=client G=pwFile H=komisi
+    const d = rows[1] || [];
+    sheetData = {
+      akun:     (d[0]||'').replace(/"/g,'').trim(),
+      sandi:    (d[1]||'').replace(/"/g,'').trim(),
+      token:    (d[3]||'').replace(/"/g,'').trim(),   // D2
+      fileName: (d[4]||'').replace(/"/g,'').trim(),
+      client:   (d[5]||'').replace(/"/g,'').trim(),
+      pwFile:   (d[6]||'').replace(/"/g,'').trim(),
+      komisi:   (d[7]||'').replace(/"/g,'').trim(),
+    };
+    renderDocList();
   } catch(e) {
-    console.error('[fetchFiles] error:', e);
-    fileRows = [];
+    sheetData = { akun:'', sandi:'', token:'ERROR', fileName:'ERROR_LOADING', client:'—', pwFile:'—', komisi:'—' };
+    renderDocList();
   }
 }
+
+// ══════════════════════════════════════════════
+// RENDER DOC LIST — klik nama file → popup info+token
+// ══════════════════════════════════════════════
+function renderDocList() {
+  if (!sheetData) return;
+  document.getElementById('docList').innerHTML = `
+    <div class="doc-card">
+      <div class="doc-num">DOC#001</div>
+      <div class="doc-info">
+        <div class="doc-name" onclick="openFileInfo()" title="Klik untuk lihat info & token">
+          ${sheetData.fileName || 'UNNAMED_FILE'}
+        </div>
+        <div class="doc-meta">TYPE: DOC &nbsp;|&nbsp; CLIENT: ${sheetData.client||'—'} &nbsp;|&nbsp; PEMBUAT: ExoilD</div>
+        <div class="doc-hint">▸ KLIK NAMA FILE UNTUK LIHAT TOKEN &amp; INFO</div>
+      </div>
+      <button class="btn-dl" onclick="openDownloadTerminal()">► DOWNLOAD</button>
+    </div>
+  `;
+}
+
+function openFileInfo() {
+  if (!sheetData) return;
+  document.getElementById('infoFileName').textContent = sheetData.fileName || '—';
+  document.getElementById('infoClient').textContent = sheetData.client || '—';
+  document.getElementById('infoToken').textContent = sheetData.token || '—';
+  document.getElementById('fileInfoModal').classList.add('open');
+}
+
+function copyToken() {
+  const tok = sheetData?.token || '';
+  navigator.clipboard.writeText(tok).catch(()=>{});
+  const btn = document.getElementById('copyTokenBtn');
+  const orig = btn.textContent;
+  btn.textContent = 'COPIED!';
+  btn.style.color = 'var(--green)';
+  btn.style.borderColor = 'var(--green-dim)';
+  setTimeout(() => {
+    btn.textContent = orig;
+    btn.style.color = '#330000';
+    btn.style.borderColor = '#2a0000';
+  }, 1800);
+}
+
+// ══════════════════════════════════════════════
+// LOGIN
+// ══════════════════════════════════════════════
+document.getElementById('loginBtn').addEventListener('click', doLogin);
+document.getElementById('loginPass').addEventListener('keydown', e => { if (e.key==='Enter') doLogin(); });
+document.getElementById('loginUser').addEventListener('keydown', e => { if (e.key==='Enter') document.getElementById('loginPass').focus(); });
 
 async function doLogin() {
-  const user = clean(document.getElementById('inputUser').value);
-  const pass = clean(document.getElementById('inputPass').value);
-  const err  = document.getElementById('loginError');
-  if (!user || !pass) { err.textContent = '⚠ SEMUA FIELD WAJIB DIISI'; return; }
-  err.textContent = 'MEMVERIFIKASI...';
-  await fetchAkun();
-  const ok = akunRows.find(r =>
-    r.akun.toLowerCase() === user.toLowerCase() &&
-    r.sandi === pass
-  );
-  if (!ok) {
-    err.textContent = '⚠ AKUN ATAU SANDI SALAH';
-    document.getElementById('inputPass').value = '';
-    return;
+  const user = document.getElementById('loginUser').value.trim();
+  const pass = document.getElementById('loginPass').value.trim();
+  const errEl = document.getElementById('loginError');
+  if (!user || !pass) { showError(errEl, '⚠ FIELD CANNOT BE EMPTY'); return; }
+  if (!sheetData) { showError(errEl, '⚠ LOADING DATA, PLEASE WAIT...'); return; }
+  const btn = document.getElementById('loginBtn');
+  btn.textContent = '► VERIFYING...'; btn.disabled = true;
+  await delay(800);
+  if (user === sheetData.akun && pass === sheetData.sandi) {
+    document.getElementById('sessionUser').textContent = user.toUpperCase();
+    document.getElementById('loginScreen').classList.remove('active');
+    document.getElementById('dashScreen').classList.add('active');
+  } else {
+    btn.textContent = '► AUTHENTICATE'; btn.disabled = false;
+    showError(errEl, '⚠ ACCESS DENIED — INVALID CREDENTIALS');
   }
-  currentUser = user;
-  err.textContent = '';
-  await fetchFiles();
-  document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('dashboard').style.display = 'block';
-  document.getElementById('displayUser').textContent = user.toUpperCase();
-  renderFolders();
+}
+function showError(el, msg) {
+  el.textContent = msg;
 }
 
-function doLogout() {
-  document.getElementById('loginScreen').style.display = 'flex';
-  document.getElementById('dashboard').style.display = 'none';
-  document.getElementById('inputUser').value = '';
-  document.getElementById('inputPass').value = '';
-  currentUser = ''; fileRows = []; akunRows = [];
-  goHome();
-}
-
-function renderFolders() {
-  document.getElementById('folderView').style.display = 'block';
-  document.getElementById('fileView').style.display = 'none';
-  document.getElementById('sectionTitle').textContent = 'PROJECT';
-  setBreadcrumb([{label:'⌂ ROOT',click:'goHome()'},{label:'Project'}]);
-  const grid = document.getElementById('folderGrid');
-  grid.innerHTML = '';
-  FOLDERS.forEach((f, i) => {
-    const n = fileRows.filter(r => r.folder === f.id).length;
-    const d = document.createElement('div');
-    d.className = 'folder-card';
-    d.style.animationDelay = (i * .07) + 's';
-    d.innerHTML = `<span class="folder-icon">${f.icon}</span><div class="folder-name">${f.label}</div><div class="folder-count">${n} FILE${n !== 1 ? 'S' : ''}</div>`;
-    d.onclick = () => openFolder(f.id);
-    grid.appendChild(d);
+// ══════════════════════════════════════════════
+// PAGE NAV
+// ══════════════════════════════════════════════
+function showPage(name) {
+  ['doc','edit','coding','virus'].forEach(p => {
+    document.getElementById(`page-${p}`).style.display = p===name ? 'block' : 'none';
+    document.getElementById(`nav-${p}`).classList.toggle('active', p===name);
   });
 }
 
-function goHome() { renderFolders(); }
-
-function openFolder(id) {
-  const f = FOLDERS.find(x => x.id === id);
-  document.getElementById('folderView').style.display = 'none';
-  document.getElementById('fileView').style.display = 'block';
-  document.getElementById('sectionTitle').textContent = id;
-  setBreadcrumb([
-    {label:'⌂ ROOT', click:'goHome()'},
-    {label:'Project', click:'goHome()'},
-    {label:(f ? f.icon : '') + ' ' + id}
-  ]);
-  renderFiles(id);
-}
-
-function setBreadcrumb(parts) {
-  document.getElementById('breadcrumb').innerHTML = parts.map((p, i) => {
-    const sep = i ? '&nbsp;/&nbsp;' : '';
-    if (p.click) return sep + `<span class="bc-link" onclick="${p.click}">${p.label}</span>`;
-    return sep + `<span>${p.label}</span>`;
-  }).join('');
-}
-
-function renderFiles(id) {
-  const list  = document.getElementById('fileList');
-  const empty = document.getElementById('emptyMsg');
-  list.innerHTML = '';
-  const files = fileRows.filter(r => r.folder === id);
-  if (!files.length) { empty.style.display = 'block'; return; }
-  empty.style.display = 'none';
-  files.forEach((row, i) => {
-    const div = document.createElement('div');
-    div.className = 'file-row';
-    div.style.animationDelay = (i * .06) + 's';
-    const key = encodeURIComponent(JSON.stringify(row));
-    div.innerHTML = `
-      <div class="file-id">${row.fileId}</div>
-      <div class="file-name-cell"><span style="color:var(--text-dim)">📁</span><span>${row.fileName}</span></div>
-      <button class="btn-dl" onclick="openTokenModal(event,'${key}')">↓ UNDUH</button>`;
-    div.addEventListener('click', e => { if (e.target.tagName === 'BUTTON') return; openFileIdModal(row); });
-    list.appendChild(div);
-  });
-}
-
-function openFileIdModal(row) {
-  currentFile = row;
-  document.getElementById('inputFileId').value = '';
-  document.getElementById('fileIdError').textContent = '';
-  document.getElementById('tokenResultBox').style.display = 'none';
-  openModal('modalFileId');
-}
-
-function verifyFileId() {
-  const v = clean(document.getElementById('inputFileId').value);
-  const e = document.getElementById('fileIdError');
-  if (!v) { e.textContent = '⚠ MASUKKAN FILE ID'; return; }
-  if (v === currentFile.fileId) {
-    e.textContent = '';
-    document.getElementById('tokenDisplay').textContent = currentFile.token;
-    document.getElementById('tokenResultBox').style.display = 'block';
-  } else {
-    e.textContent = '⚠ FILE ID TIDAK VALID';
-    document.getElementById('tokenResultBox').style.display = 'none';
-  }
-}
-
-function openTokenModal(e, key) {
-  e.stopPropagation();
-  currentFile = JSON.parse(decodeURIComponent(key));
-  document.getElementById('tokenFileName').textContent = currentFile.fileName;
-  document.getElementById('inputToken').value = '';
-  document.getElementById('tokenError').textContent = '';
-  openModal('modalToken');
-}
-
-function verifyToken() {
-  const v = clean(document.getElementById('inputToken').value);
-  const e = document.getElementById('tokenError');
-  if (!v) { e.textContent = '⚠ MASUKKAN KODE TOKEN'; return; }
-  if (v === currentFile.token) {
-    e.textContent = '';
-    closeModal('modalToken');
-    showFileInfo();
-  } else {
-    e.textContent = '⚠ TOKEN TIDAK VALID';
-  }
-}
-
-function showFileInfo() {
-  document.getElementById('fi-name').textContent  = currentFile.fileName  || '—';
-  document.getElementById('fi-pass').textContent  = currentFile.sandiFile || '—';
-  const h = currentFile.harga;
-  document.getElementById('fi-price').textContent = h ? 'Rp ' + Number(h).toLocaleString('id-ID') : '—';
-  document.getElementById('fileInfoSub').textContent = currentFile.fileName;
-  openModal('modalFileInfo');
-}
-
-const STEPS = [
-  'MENGAMANKAN KONEKSI...',
-  'MEMVERIFIKASI TOKEN...',
-  'MEMBUKA ENKRIPSI FILE...',
-  'MENYIAPKAN PAKET DATA...',
-  'MENGAMBIL FILE DARI SERVER...',
-  'HAMPIR SELESAI, DITUNGGU...',
-];
-
-async function loadCecanImage() {
-  const el  = document.getElementById('loadingImg');
-  const api = CECAN_APIS[Math.floor(Math.random() * CECAN_APIS.length)];
-  el.style.opacity = '0';
-  try {
-    const res  = await fetch(api);
-    const data = await res.json();
-    // Scan semua nilai string di object secara rekursif
-    function findUrl(obj, depth) {
-      if (depth > 4) return '';
-      if (typeof obj === 'string' && obj.startsWith('http')) return obj;
-      if (Array.isArray(obj)) {
-        for (const v of obj) { const u = findUrl(v, depth+1); if (u) return u; }
-      }
-      if (obj && typeof obj === 'object') {
-        // prioritaskan key yang mengandung kata url/image/img
-        const priority = ['url','image','img','photo','pic','src','link'];
-        for (const k of priority) {
-          if (obj[k]) { const u = findUrl(obj[k], depth+1); if (u) return u; }
-        }
-        for (const v of Object.values(obj)) {
-          const u = findUrl(v, depth+1); if (u) return u;
-        }
-      }
-      return '';
-    }
-    const url = findUrl(data, 0);
-    if (url) {
-      el.onload  = () => { el.style.opacity = '1'; };
-      el.onerror = () => { el.style.opacity = '0.3'; };
-      el.src = url;
-    } else {
-      el.style.opacity = '0.3';
-    }
-  } catch(e) { el.style.opacity = '0.3'; }
-}
-
-function startLoading() {
-  closeModal('modalFileInfo');
-  const scr     = document.getElementById('loadingScreen');
-  const fill    = document.getElementById('progressFill');
-  const pctEl   = document.getElementById('progressPct');
-  const stepEl  = document.getElementById('loadingStepMsg');
-  const stepLbl = document.getElementById('progressStep');
-  fill.style.width = '0%';
-  pctEl.textContent = '0%';
-  scr.classList.add('active');
-  loadCecanImage();
-  const TOTAL = 30000, TICK = 250;
-  let elapsed = 0;
-  imgTimer = setInterval(() => loadCecanImage(), 10000);
-  ldTimer = setInterval(() => {
-    elapsed += TICK;
-    const pct = Math.min(Math.floor((elapsed / TOTAL) * 100), 100);
-    fill.style.width = pct + '%';
-    pctEl.textContent = pct + '%';
-    const si = Math.min(Math.floor(pct / (100 / STEPS.length)), STEPS.length - 1);
-    stepEl.textContent  = STEPS[si];
-    stepLbl.textContent = pct < 100 ? 'MEMPROSES...' : 'SELESAI ✓';
-    if (elapsed >= TOTAL) {
-      clearInterval(ldTimer); clearInterval(imgTimer);
-      fill.style.width = '100%'; pctEl.textContent = '100%';
-      stepEl.textContent = '✓ FILE SIAP — MENGUNDUH...';
-      setTimeout(() => {
-        scr.classList.remove('active');
-        if (currentFile && currentFile.link) window.open(currentFile.link, '_blank');
-        else showToast('✓ FILE BERHASIL DIPROSES');
-      }, 900);
-    }
-  }, TICK);
-}
-
-function showToast(msg) {
-  const t = document.createElement('div');
-  t.style.cssText = "position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:#0d0505;border:1px solid var(--red);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:13px;letter-spacing:2px;padding:14px 28px;z-index:9999;box-shadow:0 0 30px var(--red-glow);";
-  t.textContent = msg;
-  document.body.appendChild(t);
-  setTimeout(() => t.remove(), 3500);
-}
-
-function openModal(id)  { document.getElementById(id).classList.add('open'); }
+// ══════════════════════════════════════════════
+// CLOSE MODALS
+// ══════════════════════════════════════════════
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-document.querySelectorAll('.modal-overlay').forEach(o => {
-  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
+document.querySelectorAll('.modal-bg').forEach(bg => {
+  bg.addEventListener('click', e => {
+    if (e.target === bg && bg.id !== 'terminalModal') closeModal(bg.id);
+  });
 });
-document.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && document.getElementById('loginScreen').style.display !== 'none') doLogin();
-});
+
+// ══════════════════════════════════════════════
+// TERMINAL DOWNLOAD — Interactive
+// ══════════════════════════════════════════════
+let termPhase = 'idle'; // 'idle' | 'waiting_token' | 'running'
+
+function openDownloadTerminal() {
+  document.getElementById('termBody').innerHTML = '';
+  document.getElementById('termTimer').textContent = '';
+  document.getElementById('termLabel').textContent = 'exoild@secure-terminal — bash';
+  termPhase = 'idle';
+  document.getElementById('terminalModal').classList.add('open');
+  runTerminalIntro();
+}
+
+// Helper: append a line
+function termLine(html, delay_ms) {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      const body = document.getElementById('termBody');
+      const el = document.createElement('div');
+      el.className = 'tl';
+      el.innerHTML = html;
+      body.appendChild(el);
+      body.scrollTop = body.scrollHeight;
+      resolve();
+    }, delay_ms);
+  });
+}
+
+// Helper: type out text character by character into a span
+async function termType(parentEl, text, colorClass, speedMs) {
+  const span = document.createElement('span');
+  if (colorClass) span.className = colorClass;
+  parentEl.appendChild(span);
+  for (let ch of text) {
+    span.textContent += ch;
+    document.getElementById('termBody').scrollTop = 99999;
+    await delay(speedMs);
+  }
+}
+
+async function runTerminalIntro() {
+  const user = (document.getElementById('sessionUser').textContent || 'user').toLowerCase();
+  const body = document.getElementById('termBody');
+  termPhase = 'running';
+
+  // Phase 1: Login
+  await termLine(`<span class="tl-green">exoild@secure:~# <span class="tl-white">su ${user}</span></span>`, 200);
+  await delay(600);
+  await termLine(`<span class="tl-dim">[sudo] password for ${user}: ••••••••</span>`, 0);
+  await delay(900);
+  await termLine(`<span class="tl-green">Authentication successful.</span>`, 0);
+  await delay(400);
+  await termLine(`<span class="tl-green">exoild@secure:~/user# <span class="tl-white">./exoild run --secure</span></span>`, 200);
+  await delay(700);
+
+  // Phase 2: Boot sequence
+  await termLine(`<span class="tl-red">Run...</span>`, 0);
+  await delay(500);
+  await termLine(`<span class="tl-green">[Info] Starting server.............. <span style="color:#00ff41">✓ OK</span></span>`, 300);
+  await delay(500);
+  await termLine(`<span class="tl-yellow">[Info] Connecting to remote node.... <span class="tl-yellow">WAIT</span></span>`, 0);
+  await delay(900);
+  await termLine(`<span class="tl-yellow">[Info] Handshaking with peer........ <span class="tl-yellow">...</span></span>`, 0);
+  await delay(1000);
+  await termLine(`<span class="tl-green">[ExoilD] Connected.................. <span style="color:#00ff41">✓ OK</span></span>`, 0);
+  await delay(400);
+  await termLine(`<span class="tl-white">[Info] Installing packages.......... <span class="tl-green">done</span></span>`, 200);
+  await delay(300);
+  await termLine(`<span class="tl-white">[Info] Linking dependencies......... <span class="tl-green">done</span></span>`, 0);
+  await delay(400);
+
+  // Phase 3: Ask for token — INTERACTIVE INPUT
+  await delay(300);
+  await termLine(`<span class="tl-orange">[Watch] Iam Watching you :)</span>`, 0);
+  await delay(500);
+  await termLine(`<span class="tl-white">[Info] File access requires token. Please authenticate.</span>`, 0);
+  await delay(400);
+
+  // Render interactive input line
+  termPhase = 'waiting_token';
+  renderTokenInputLine(user);
+}
+
+function renderTokenInputLine(user) {
+  const body = document.getElementById('termBody');
+  const wrap = document.createElement('div');
+  wrap.className = 'tl term-input-line';
+  wrap.id = 'termInputLine';
+
+  const prompt = document.createElement('span');
+  prompt.className = 'term-input-prompt';
+  prompt.textContent = `${user}@exoild:~/user$ `;
+
+  const inp = document.createElement('input');
+  inp.className = 'term-text-input';
+  inp.id = 'termTokenField';
+  inp.type = 'text';
+  inp.setAttribute('autocomplete', 'off');
+  inp.setAttribute('spellcheck', 'false');
+  inp.placeholder = 'enter token...';
+
+  wrap.appendChild(prompt);
+  wrap.appendChild(inp);
+  body.appendChild(wrap);
+  body.scrollTop = 99999;
+
+  inp.focus();
+  inp.addEventListener('keydown', async (e) => {
+    if (e.key === 'Enter' && termPhase === 'waiting_token') {
+      const val = inp.value.trim();
+      termPhase = 'running';
+
+      // Replace input line with static typed line
+      const staticLine = document.createElement('div');
+      staticLine.className = 'tl';
+      staticLine.innerHTML = `<span class="tl-green">${prompt.textContent}</span><span class="tl-white">${val || '(empty)'}</span>`;
+      body.replaceChild(staticLine, wrap);
+
+      await delay(200);
+      if (!sheetData || val !== sheetData.token) {
+        await termLine(`<span class="tl-red">[Error] Invalid token. Access denied.</span>`, 0);
+        await delay(600);
+        await termLine(`<span class="tl-dim">Connection closed by remote host.</span>`, 0);
+        await delay(1200);
+        closeModal('terminalModal');
+      } else {
+        await runDownloadSequence();
+      }
+    }
+  });
+}
+
+async function runDownloadSequence() {
+  const fn = sheetData?.fileName || 'document';
+  const TOTAL = 22000;
+  const startTime = Date.now();
+  const timerEl = document.getElementById('termTimer');
+
+  const timerInterval = setInterval(() => {
+    const rem = Math.max(0, Math.ceil((TOTAL - (Date.now()-startTime))/1000));
+    timerEl.textContent = rem + 's';
+    if (rem <= 0) clearInterval(timerInterval);
+  }, 200);
+
+  await termLine(`<span class="tl-green">[Info] Token accepted. Locating file: <span class="tl-yellow">${fn}</span></span>`, 300);
+  await delay(600);
+  await termLine(`<span class="tl-white">[Info] Verifying file hash........... <span class="tl-green">SHA256 ✓</span></span>`, 0);
+  await delay(500);
+  await termLine(`<span class="tl-white">[Info] Encrypting transfer channel... <span class="tl-green">AES-256 OK</span></span>`, 0);
+  await delay(400);
+  await termLine(`<span class="tl-white">[Info] Allocating buffer............. <span class="tl-green">OK</span></span>`, 0);
+  await delay(500);
+  await termLine(`<span class="tl-white">[Info] Initiating secure stream......</span>`, 0);
+  await delay(600);
+
+  // Progress bar
+  const progWrap = document.createElement('div');
+  progWrap.className = 'tl';
+  progWrap.id = 'termProgLine';
+  progWrap.innerHTML = `<span class="tl-green">[░░░░░░░░░░░░░░░░░░░░] <span id="termPct">0%</span> transferring...</span>`;
+  document.getElementById('termBody').appendChild(progWrap);
+  document.getElementById('termBody').scrollTop = 99999;
+
+  const progDuration = 14000;
+  let prog = 0;
+  await new Promise(resolve => {
+    const pi = setInterval(() => {
+      prog = Math.min(100, prog + 1);
+      const f = Math.floor(prog / 5);
+      const barStr = '█'.repeat(f) + '░'.repeat(20-f);
+      const pLine = document.getElementById('termProgLine');
+      const pct = document.getElementById('termPct');
+      if (pLine && pct) {
+        pLine.innerHTML = `<span class="tl-green">[${barStr}] <span id="termPct">${prog}%</span> transferring...</span>`;
+      }
+      document.getElementById('termBody').scrollTop = 99999;
+      if (prog >= 100) { clearInterval(pi); resolve(); }
+    }, progDuration / 100);
+  });
+
+  await delay(400);
+  await termLine(`<span class="tl-green">[Info] Transfer complete............. <span style="color:#00ff41">✓</span></span>`, 0);
+  await delay(400);
+  await termLine(`<span class="tl-green">[ExoilD] File ready. Preparing download...</span>`, 0);
+  await delay(500);
+
+  const user = (document.getElementById('sessionUser').textContent || 'USER').toLowerCase();
+  await termLine(`<span class="tl-green">${user}@exoild:~/user$ <span class="tl-dim">_<span class="term-cursor"></span></span></span>`, 0);
+
+  clearInterval(timerInterval);
+  timerEl.textContent = '';
+  await delay(800);
+  closeModal('terminalModal');
+  triggerDownload();
+}
+
+function triggerDownload() {
+  const dlUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=xlsx`;
+  const a = document.createElement('a');
+  a.href = dlUrl;
+  a.download = (sheetData?.fileName||'document') + '.xlsx';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  document.getElementById('statusMsg').textContent = 'FILE DOWNLOADED: ' + (sheetData?.fileName||'document');
+}
+
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+fetchSheetData();
 </script>
 </body>
 </html>
