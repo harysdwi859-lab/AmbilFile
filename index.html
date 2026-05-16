@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ExoilD — File Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red:#e01c2e; --red-dim:#8b0f1a; --red-glow:rgba(224,28,46,0.35);
+    --bg:#050505; --bg2:#0d0d0d; --border:rgba(224,28,46,0.25);
+    --text:#e8e0dc; --text-dim:#6b5e5e; --gold:#c9a84c;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;min-height:100vh;overflow-x:hidden;}
+  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(224,28,46,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(224,28,46,0.04) 1px,transparent 1px);background-size:40px 40px;animation:gridDrift 20s linear infinite;pointer-events:none;z-index:0;}
+  @keyframes gridDrift{from{background-position:0 0}to{background-position:40px 40px}}
+  body::after{content:'';position:fixed;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--red),transparent);animation:scanLine 6s linear infinite;pointer-events:none;z-index:1;opacity:.5;}
+  @keyframes scanLine{from{top:-2px}to{top:100vh}}
+  .screen{position:relative;z-index:2;}
+
+  /* LOGIN */
+  #loginScreen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;}
+  .login-box{width:100%;max-width:420px;border:1px solid var(--border);background:linear-gradient(135deg,rgba(13,13,13,.97),rgba(20,5,5,.97));padding:48px 40px;position:relative;animation:boxIn .8s cubic-bezier(.16,1,.3,1) both;}
+  @keyframes boxIn{from{opacity:0;transform:translateY(30px) scale(.97)}to{opacity:1;transform:none}}
+  .login-box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--red),var(--gold),var(--red),transparent);animation:shimmer 3s ease-in-out infinite;}
+  .login-box::after{content:'';position:absolute;inset:0;box-shadow:0 0 60px var(--red-glow),inset 0 0 40px rgba(224,28,46,.03);pointer-events:none;}
+  @keyframes shimmer{0%,100%{opacity:.6}50%{opacity:1}}
+  .logo{text-align:center;margin-bottom:36px;}
+  .logo-name{font-family:'Bebas Neue',sans-serif;font-size:52px;letter-spacing:8px;background:linear-gradient(135deg,#fff 0%,var(--red) 50%,var(--gold) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1;}
+  .logo-sub{font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:4px;color:var(--text-dim);margin-top:4px;}
+  .divider{height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);margin:28px 0;}
+  .field-group{margin-bottom:20px;}
+  .field-label{font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:3px;color:var(--red);margin-bottom:8px;display:block;}
+  .field-input{width:100%;background:rgba(255,255,255,.03);border:1px solid rgba(224,28,46,.2);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:14px;padding:12px 16px;outline:none;letter-spacing:2px;transition:border-color .3s,box-shadow .3s,background .3s;}
+  .field-input:focus{border-color:var(--red);background:rgba(224,28,46,.05);box-shadow:0 0 20px rgba(224,28,46,.15);}
+  .field-input::placeholder{color:#3a2a2a;}
+  .btn-main{width:100%;padding:14px;background:linear-gradient(135deg,var(--red-dim),var(--red));border:none;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:4px;cursor:pointer;position:relative;overflow:hidden;transition:transform .2s,box-shadow .3s;margin-top:8px;}
+  .btn-main::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent,rgba(255,255,255,.1));transform:translateX(-100%);transition:transform .4s;}
+  .btn-main:hover::before{transform:translateX(100%);}
+  .btn-main:hover{box-shadow:0 0 30px var(--red-glow);transform:translateY(-1px);}
+  .error-msg{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--red);letter-spacing:2px;margin-top:12px;text-align:center;min-height:18px;}
+  .status-dot{width:6px;height:6px;border-radius:50%;background:var(--red);display:inline-block;animation:pulse 2s ease-in-out infinite;margin-right:6px;}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+
+  /* DASHBOARD */
+  #dashboard{display:none;min-height:100vh;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;border-bottom:1px solid var(--border);background:rgba(13,13,13,.9);backdrop-filter:blur(10px);position:sticky;top:0;z-index:100;}
+  .topbar-logo{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:5px;background:linear-gradient(90deg,#fff,var(--red));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+  .topbar-user{font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--text-dim);display:flex;align-items:center;gap:16px;}
+  .user-badge{background:rgba(224,28,46,.1);border:1px solid var(--border);padding:4px 12px;font-size:11px;color:var(--red);letter-spacing:2px;}
+  .btn-logout{background:none;border:1px solid rgba(224,28,46,.3);color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:2px;padding:5px 12px;cursor:pointer;transition:all .2s;}
+  .btn-logout:hover{border-color:var(--red);color:var(--red);}
+  .main-content{padding:40px 32px;max-width:1100px;margin:0 auto;}
+  .section-header{display:flex;align-items:center;gap:12px;margin-bottom:32px;}
+  .section-title{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:5px;color:var(--text);}
+  .section-line{flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent);}
+  .breadcrumb{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:2px;margin-bottom:24px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+  .bc-link{color:var(--red);cursor:pointer;}
+  .bc-link:hover{text-decoration:underline;}
+
+  /* FOLDER GRID */
+  .folder-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:16px;}
+  .folder-card{border:1px solid var(--border);background:linear-gradient(135deg,rgba(15,5,5,.8),rgba(20,10,10,.8));padding:28px 20px;cursor:pointer;text-align:center;position:relative;overflow:hidden;transition:transform .25s,border-color .25s,box-shadow .25s;animation:cardIn .5s cubic-bezier(.16,1,.3,1) both;}
+  .folder-card::before{content:'';position:absolute;top:0;left:-100%;right:100%;height:1px;background:linear-gradient(90deg,transparent,var(--red),transparent);transition:left .4s,right .4s;}
+  .folder-card:hover::before{left:0;right:0;}
+  .folder-card:hover{border-color:var(--red);box-shadow:0 0 25px rgba(224,28,46,.2);transform:translateY(-3px);}
+  @keyframes cardIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+  .folder-icon{font-size:36px;margin-bottom:12px;display:block;}
+  .folder-name{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;color:var(--text);}
+  .folder-count{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim);margin-top:4px;letter-spacing:1px;}
+
+  /* FILE TABLE */
+  .file-table-header{display:grid;grid-template-columns:160px 1fr auto;padding:10px 16px;background:rgba(224,28,46,.08);border:1px solid var(--border);font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:2px;color:var(--text-dim);margin-bottom:2px;}
+  .file-row{display:grid;grid-template-columns:160px 1fr auto;align-items:center;padding:14px 16px;border:1px solid rgba(224,28,46,.1);border-top:none;background:rgba(10,5,5,.5);transition:background .2s,border-color .2s;animation:rowIn .4s cubic-bezier(.16,1,.3,1) both;cursor:pointer;}
+  .file-row:first-of-type{border-top:1px solid rgba(224,28,46,.1);}
+  .file-row:hover{background:rgba(224,28,46,.06);border-color:rgba(224,28,46,.3);}
+  @keyframes rowIn{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:none}}
+  .file-id{font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--red);letter-spacing:1px;}
+  .file-name-cell{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:500;}
+  .btn-dl{background:none;border:1px solid rgba(224,28,46,.4);color:var(--red);font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:2px;padding:6px 14px;cursor:pointer;transition:all .2s;white-space:nowrap;}
+  .btn-dl:hover{background:var(--red);color:#fff;box-shadow:0 0 15px var(--red-glow);}
+
+  /* LOADING SCREEN */
+  #loadingScreen{display:none;position:fixed;inset:0;z-index:999;background:#050505;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:20px;}
+  #loadingScreen.active{display:flex;}
+  .loading-img-wrap{width:340px;height:230px;overflow:hidden;border:1px solid var(--border);position:relative;margin-bottom:28px;box-shadow:0 0 50px var(--red-glow);}
+  .loading-img-wrap::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 55%,#050505 100%);pointer-events:none;}
+  /* scan line over image */
+  .loading-img-wrap::before{content:'';position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(224,28,46,.6),transparent);animation:imgScan 2s linear infinite;z-index:2;}
+  @keyframes imgScan{from{top:0}to{top:100%}}
+  #loadingImg{width:100%;height:100%;object-fit:cover;transition:opacity .5s ease;}
+  .loading-tagline{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:4px;color:var(--text);text-align:center;margin-bottom:24px;}
+  .loading-tagline span{color:var(--red);}
+  .progress-wrap{width:340px;}
+  .progress-track{height:5px;background:rgba(224,28,46,.12);border:1px solid rgba(224,28,46,.2);position:relative;overflow:hidden;}
+  .progress-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--red-dim),var(--red),var(--gold));transition:width .4s linear;position:relative;}
+  .progress-fill::after{content:'';position:absolute;right:-1px;top:-3px;width:7px;height:11px;background:var(--gold);box-shadow:0 0 10px var(--gold);}
+  .progress-labels{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);margin-top:10px;display:flex;justify-content:space-between;letter-spacing:1px;}
+  #progressPct{color:var(--gold);font-size:13px;font-weight:bold;}
+  .loading-step{margin-top:16px;font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim);letter-spacing:3px;text-align:center;min-height:14px;animation:stepBlink 1s ease-in-out infinite;}
+  @keyframes stepBlink{0%,100%{opacity:1}50%{opacity:.4}}
+
+  /* MODALS */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(6px);z-index:500;align-items:center;justify-content:center;padding:16px;}
+  .modal-overlay.open{display:flex;}
+  .modal-box{width:100%;max-width:460px;background:linear-gradient(135deg,#0d0505,#110808);border:1px solid var(--border);padding:36px 32px;position:relative;animation:modalIn .35s cubic-bezier(.16,1,.3,1) both;}
+  @keyframes modalIn{from{opacity:0;transform:scale(.93)}to{opacity:1;transform:none}}
+  .modal-box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--red),transparent);}
+  .modal-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:4px;margin-bottom:6px;}
+  .modal-subtitle{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:2px;margin-bottom:24px;}
+  .modal-close{position:absolute;top:16px;right:16px;background:none;border:none;color:var(--text-dim);font-size:20px;cursor:pointer;transition:color .2s;line-height:1;}
+  .modal-close:hover{color:var(--red);}
+  .file-info-card{border:1px solid var(--border);background:rgba(224,28,46,.04);padding:20px;margin-bottom:20px;}
+  .info-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(224,28,46,.1);}
+  .info-row:last-child{border-bottom:none;}
+  .info-key{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:2px;}
+  .info-val{font-size:14px;font-weight:600;color:var(--text);font-family:'Share Tech Mono',monospace;}
+  .info-val.hl{color:var(--red);}
+  .info-val.gd{color:var(--gold);}
+  .btn-dl-final{width:100%;padding:14px;background:linear-gradient(135deg,#8b0f1a,var(--red));border:none;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:box-shadow .3s,transform .2s;margin-top:8px;}
+  .btn-dl-final:hover{box-shadow:0 0 30px var(--red-glow);transform:translateY(-1px);}
+  .token-result-box{display:none;margin-top:16px;padding:16px;border:1px solid var(--border);background:rgba(224,28,46,.05);}
+  .tr-label{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim);letter-spacing:2px;margin-bottom:8px;}
+  .tr-token{font-family:'Share Tech Mono',monospace;font-size:18px;color:var(--gold);letter-spacing:4px;word-break:break-all;}
+  .tr-hint{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim);margin-top:8px;letter-spacing:1px;}
+
+  @media(max-width:600px){
+    .topbar{padding:12px 16px;}
+    .main-content{padding:24px 16px;}
+    .file-table-header,.file-row{grid-template-columns:1fr auto;}
+    .file-table-header .col-id,.file-row .file-id{display:none;}
+    .login-box{padding:32px 24px;}
+    .loading-img-wrap,.progress-wrap{width:90vw;}
+  }
+  ::-webkit-scrollbar{width:4px;}
+  ::-webkit-scrollbar-track{background:var(--bg2);}
+  ::-webkit-scrollbar-thumb{background:var(--red-dim);}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen" class="screen">
+  <div class="login-box">
+    <div class="logo">
+      <div class="logo-name">ExoilD</div>
+      <div class="logo-sub">SECURE FILE PORTAL</div>
+    </div>
+    <div class="divider"></div>
+    <div class="field-group">
+      <label class="field-label">▸ NAMA AKUN</label>
+      <input class="field-input" id="inputUser" type="text" placeholder="MASUKKAN AKUN" autocomplete="off">
+    </div>
+    <div class="field-group">
+      <label class="field-label">▸ SANDI</label>
+      <input class="field-input" id="inputPass" type="password" placeholder="••••••••••">
+    </div>
+    <button class="btn-main" onclick="doLogin()">AKSES PORTAL</button>
+    <div class="error-msg" id="loginError"></div>
+    <div style="margin-top:24px;text-align:center;">
+      <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#2a1515;letter-spacing:2px;">
+        <span class="status-dot"></span>SYSTEM ONLINE — v2.4.1
+      </span>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard" class="screen">
+  <div class="topbar">
+    <div class="topbar-logo">ExoilD</div>
+    <div class="topbar-user">
+      <span class="user-badge">⬡ <span id="displayUser">USER</span></span>
+      <button class="btn-logout" onclick="doLogout()">KELUAR ✕</button>
+    </div>
+  </div>
+  <div class="main-content">
+    <div class="breadcrumb" id="breadcrumb"></div>
+    <div class="section-header">
+      <div class="section-title" id="sectionTitle">PROJECT</div>
+      <div class="section-line"></div>
+    </div>
+    <div id="folderView"><div class="folder-grid" id="folderGrid"></div></div>
+    <div id="fileView" style="display:none;">
+      <div class="file-table-header">
+        <div class="col-id">FILE ID</div>
+        <div>NAMA FILE</div>
+        <div>AKSI</div>
+      </div>
+      <div id="fileList"></div>
+      <div id="emptyMsg" style="display:none;text-align:center;padding:40px;font-family:'Share Tech Mono',monospace;font-size:12px;color:#3a2020;letter-spacing:2px;">— FOLDER KOSONG —</div>
+    </div>
+  </div>
+</div>
+
+<!-- LOADING SCREEN -->
+<div id="loadingScreen">
+  <div class="loading-img-wrap">
+    <img id="loadingImg" src="" alt="">
+  </div>
+  <div class="loading-tagline">Sabar ya bang, <span>Nih liat dulu~</span></div>
+  <div class="progress-wrap">
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+    <div class="progress-labels">
+      <span id="progressStep">MEMPROSES...</span>
+      <span id="progressPct">0%</span>
+    </div>
+  </div>
+  <div class="loading-step" id="loadingStepMsg">MENGAMANKAN KONEKSI...</div>
+</div>
+
+<!-- MODAL: File ID → Token -->
+<div class="modal-overlay" id="modalFileId">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('modalFileId')">✕</button>
+    <div class="modal-title">VERIFIKASI FILE ID</div>
+    <div class="modal-subtitle">MASUKKAN FILE ID UNTUK MENDAPATKAN TOKEN</div>
+    <div class="field-group">
+      <label class="field-label">▸ FILE ID</label>
+      <input class="field-input" id="inputFileId" type="text" placeholder="MASUKKAN FILE ID" autocomplete="off">
+    </div>
+    <button class="btn-main" onclick="verifyFileId()">DAPATKAN TOKEN</button>
+    <div class="error-msg" id="fileIdError"></div>
+    <div class="token-result-box" id="tokenResultBox">
+      <div class="tr-label">TOKEN ANDA:</div>
+      <div class="tr-token" id="tokenDisplay"></div>
+      <div class="tr-hint">Gunakan token ini saat mengunduh file.</div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Token → File Info -->
+<div class="modal-overlay" id="modalToken">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('modalToken')">✕</button>
+    <div class="modal-title">TOKEN AKSES</div>
+    <div class="modal-subtitle">MASUKKAN KODE TOKEN UNTUK MENGAKSES FILE</div>
+    <div class="field-group">
+      <label class="field-label">▸ FILE</label>
+      <div id="tokenFileName" style="font-family:'Share Tech Mono',monospace;font-size:13px;color:var(--gold);padding:10px 0;"></div>
+    </div>
+    <div class="field-group">
+      <label class="field-label">▸ KODE TOKEN</label>
+      <input class="field-input" id="inputToken" type="text" placeholder="MASUKKAN TOKEN" autocomplete="off">
+    </div>
+    <button class="btn-main" onclick="verifyToken()">VERIFIKASI TOKEN</button>
+    <div class="error-msg" id="tokenError"></div>
+  </div>
+</div>
+
+<!-- MODAL: File Info + Download -->
+<div class="modal-overlay" id="modalFileInfo">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('modalFileInfo')">✕</button>
+    <div class="modal-title">INFO FILE</div>
+    <div class="modal-subtitle" id="fileInfoSub">DETAIL & UNDUH</div>
+    <div class="file-info-card">
+      <div class="info-row"><span class="info-key">NAMA FILE</span><span class="info-val" id="fi-name">—</span></div>
+      <div class="info-row"><span class="info-key">SANDI FILE</span><span class="info-val hl" id="fi-pass">—</span></div>
+      <div class="info-row"><span class="info-key">HARGA</span><span class="info-val gd" id="fi-price">—</span></div>
+      <div class="info-row"><span class="info-key">PEMBUAT</span><span class="info-val">ExoilD</span></div>
+    </div>
+    <button class="btn-dl-final" id="btnFinalDl" onclick="startLoading()">↓ DOWNLOAD FILE</button>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════
+//  DATA PER FOLDER — edit di sini
+// ════════════════════════════════
+const FOLDER_FILES = {
+  DOC: [
+    {
+      fileId:    'DOC-001',
+      token:     'TOKEN-DOC-001',
+      fileName:  'SinjaGPT_AIResult.pdf',
+      sandiFile: 'sinja123',
+      harga:     '50000',
+      link:      ''   // isi dengan URL download langsung jika ada
+    }
+    // tambah baris baru di sini untuk file DOC lainnya
+  ],
+  JOKI:   [
+    // contoh: { fileId:'JOK-001', token:'TKN-JOK-001', fileName:'...', sandiFile:'...', harga:'...', link:'' }
+  ],
+  CODING: [],
+  SCRIPT: [],
+  EDIT:   []
+};
+
+const FOLDERS = [
+  {id:'DOC',    icon:'📄', label:'DOC'},
+  {id:'JOKI',   icon:'🎮', label:'JOKI'},
+  {id:'CODING', icon:'💻', label:'CODING'},
+  {id:'SCRIPT', icon:'📜', label:'SCRIPT'},
+  {id:'EDIT',   icon:'🎬', label:'EDIT'},
+];
+
+// ════════════════
+//  STATE
+// ════════════════
+const SHEET_ID = '1MIdL7TWjkVBzQtixEX5P2cVUFuiBV516-EpLZbFbYTM';
+const CSV_URL  = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
+let sheetRows   = [];
+let currentUser = '';
+let currentFile = null;
+let ldTimer = null, imgTimer = null;
+
+// ════════════════
+//  SHEET (login)
+// ════════════════
+async function fetchSheet() {
+  try {
+    const r = await fetch(CSV_URL);
+    const t = await r.text();
+    sheetRows = t.trim().split('\n').map(line => {
+      const cols=[]; let cur=''; let inQ=false;
+      for(const c of line){
+        if(c==='"'){inQ=!inQ;}
+        else if(c===','&&!inQ){cols.push(cur.trim());cur='';}
+        else{cur+=c;}
+      }
+      cols.push(cur.trim());
+      return {akun:cols[0]||'', sandi:cols[1]||''};
+    }).filter(r=>r.akun);
+  } catch(e){ sheetRows=[]; }
+}
+
+// ════════════════
+//  LOGIN
+// ════════════════
+async function doLogin() {
+  const user = document.getElementById('inputUser').value.trim();
+  const pass = document.getElementById('inputPass').value.trim();
+  const err  = document.getElementById('loginError');
+  if(!user||!pass){err.textContent='⚠ SEMUA FIELD WAJIB DIISI';return;}
+  err.textContent='MEMVERIFIKASI...';
+  await fetchSheet();
+  const ok = sheetRows.find(r=>r.akun.toLowerCase()===user.toLowerCase()&&r.sandi===pass);
+  if(!ok){
+    err.textContent='⚠ AKUN ATAU SANDI SALAH';
+    document.getElementById('inputPass').value='';
+    return;
+  }
+  currentUser=user; err.textContent='';
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('dashboard').style.display='block';
+  document.getElementById('displayUser').textContent=user.toUpperCase();
+  renderFolders();
+}
+
+function doLogout(){
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('dashboard').style.display='none';
+  document.getElementById('inputUser').value='';
+  document.getElementById('inputPass').value='';
+  currentUser=''; goHome();
+}
+
+// ════════════════
+//  FOLDERS
+// ════════════════
+function renderFolders(){
+  document.getElementById('folderView').style.display='block';
+  document.getElementById('fileView').style.display='none';
+  document.getElementById('sectionTitle').textContent='PROJECT';
+  setBreadcrumb([{label:'⌂ ROOT',click:'goHome()'},{label:'Project'}]);
+  const grid=document.getElementById('folderGrid');
+  grid.innerHTML='';
+  FOLDERS.forEach((f,i)=>{
+    const n=(FOLDER_FILES[f.id]||[]).length;
+    const d=document.createElement('div');
+    d.className='folder-card'; d.style.animationDelay=(i*.07)+'s';
+    d.innerHTML=`<span class="folder-icon">${f.icon}</span><div class="folder-name">${f.label}</div><div class="folder-count">${n} FILE${n!==1?'S':''}</div>`;
+    d.onclick=()=>openFolder(f.id);
+    grid.appendChild(d);
+  });
+}
+
+function goHome(){ renderFolders(); }
+
+function openFolder(id){
+  const f=FOLDERS.find(x=>x.id===id);
+  document.getElementById('folderView').style.display='none';
+  document.getElementById('fileView').style.display='block';
+  document.getElementById('sectionTitle').textContent=id;
+  setBreadcrumb([{label:'⌂ ROOT',click:'goHome()'},{label:'Project',click:'goHome()'},{label:(f?f.icon:'')+' '+id}]);
+  renderFiles(id);
+}
+
+function setBreadcrumb(parts){
+  document.getElementById('breadcrumb').innerHTML=parts.map((p,i)=>{
+    const sep=i?'&nbsp;/&nbsp;':'';
+    if(p.click) return sep+`<span class="bc-link" onclick="${p.click}">${p.label}</span>`;
+    return sep+`<span>${p.label}</span>`;
+  }).join('');
+}
+
+function renderFiles(id){
+  const list=document.getElementById('fileList');
+  const empty=document.getElementById('emptyMsg');
+  list.innerHTML='';
+  const files=FOLDER_FILES[id]||[];
+  if(!files.length){empty.style.display='block';return;}
+  empty.style.display='none';
+  files.forEach((row,i)=>{
+    const div=document.createElement('div');
+    div.className='file-row'; div.style.animationDelay=(i*.06)+'s';
+    const key=encodeURIComponent(JSON.stringify(row));
+    div.innerHTML=`
+      <div class="file-id">${row.fileId}</div>
+      <div class="file-name-cell"><span style="color:var(--text-dim)">📁</span><span>${row.fileName}</span></div>
+      <button class="btn-dl" onclick="openTokenModal(event,'${key}')">↓ UNDUH</button>`;
+    div.addEventListener('click',e=>{ if(e.target.tagName==='BUTTON')return; openFileIdModal(row); });
+    list.appendChild(div);
+  });
+}
+
+// ════════════════
+//  FILE ID MODAL
+// ════════════════
+function openFileIdModal(row){
+  currentFile=row;
+  document.getElementById('inputFileId').value='';
+  document.getElementById('fileIdError').textContent='';
+  document.getElementById('tokenResultBox').style.display='none';
+  openModal('modalFileId');
+}
+function verifyFileId(){
+  const v=document.getElementById('inputFileId').value.trim();
+  const e=document.getElementById('fileIdError');
+  if(!v){e.textContent='⚠ MASUKKAN FILE ID';return;}
+  if(v===currentFile.fileId){
+    e.textContent='';
+    document.getElementById('tokenDisplay').textContent=currentFile.token;
+    document.getElementById('tokenResultBox').style.display='block';
+  } else {
+    e.textContent='⚠ FILE ID TIDAK VALID';
+    document.getElementById('tokenResultBox').style.display='none';
+  }
+}
+
+// ════════════════
+//  TOKEN MODAL
+// ════════════════
+function openTokenModal(e,key){
+  e.stopPropagation();
+  currentFile=JSON.parse(decodeURIComponent(key));
+  document.getElementById('tokenFileName').textContent=currentFile.fileName;
+  document.getElementById('inputToken').value='';
+  document.getElementById('tokenError').textContent='';
+  openModal('modalToken');
+}
+function verifyToken(){
+  const v=document.getElementById('inputToken').value.trim();
+  const e=document.getElementById('tokenError');
+  if(!v){e.textContent='⚠ MASUKKAN KODE TOKEN';return;}
+  if(v===currentFile.token){
+    e.textContent=''; closeModal('modalToken'); showFileInfo();
+  } else { e.textContent='⚠ TOKEN TIDAK VALID'; }
+}
+
+// ════════════════
+//  FILE INFO
+// ════════════════
+function showFileInfo(){
+  document.getElementById('fi-name').textContent=currentFile.fileName||'—';
+  document.getElementById('fi-pass').textContent=currentFile.sandiFile||'—';
+  const h=currentFile.harga;
+  document.getElementById('fi-price').textContent=h?'Rp '+Number(h).toLocaleString('id-ID'):'—';
+  document.getElementById('fileInfoSub').textContent=currentFile.fileName;
+  document.getElementById('btnFinalDl').textContent='↓ DOWNLOAD FILE';
+  document.getElementById('btnFinalDl').style.background='';
+  openModal('modalFileInfo');
+}
+
+// ════════════════
+//  LOADING SCREEN
+// ════════════════
+const STEPS=[
+  'MENGAMANKAN KONEKSI...',
+  'MEMVERIFIKASI TOKEN...',
+  'MEMBUKA ENKRIPSI FILE...',
+  'MENYIAPKAN PAKET DATA...',
+  'MENGAMBIL FILE DARI SERVER...',
+  'HAMPIR SELESAI, DITUNGGU...',
+];
+const IMG_KEYWORDS=['technology','abstract','dark','cyberpunk','neon','futuristic'];
+let imgSeed=Math.floor(Math.random()*800);
+
+function loadNextImage(){
+  imgSeed++;
+  const kw=IMG_KEYWORDS[imgSeed%IMG_KEYWORDS.length];
+  const el=document.getElementById('loadingImg');
+  el.style.opacity='0';
+  setTimeout(()=>{
+    // Picsum dengan random seed — selalu load cepat
+    el.src=`https://picsum.photos/seed/${imgSeed}/340/230`;
+    el.onload=()=>{ el.style.opacity='1'; };
+    el.onerror=()=>{ el.src=`https://picsum.photos/340/230?random=${imgSeed}`; el.style.opacity='1'; };
+  },300);
+}
+
+function startLoading(){
+  closeModal('modalFileInfo');
+  const scr=document.getElementById('loadingScreen');
+  scr.classList.add('active');
+  loadNextImage();
+
+  const fill=document.getElementById('progressFill');
+  const pctEl=document.getElementById('progressPct');
+  const stepEl=document.getElementById('loadingStepMsg');
+  const stepLbl=document.getElementById('progressStep');
+
+  const TOTAL=30000, TICK=250;
+  let elapsed=0;
+
+  // ganti gambar tiap 10 detik
+  imgTimer=setInterval(()=>loadNextImage(), 10000);
+
+  ldTimer=setInterval(()=>{
+    elapsed+=TICK;
+    const pct=Math.min(Math.floor((elapsed/TOTAL)*100),100);
+    fill.style.width=pct+'%';
+    pctEl.textContent=pct+'%';
+    const si=Math.min(Math.floor(pct/(100/STEPS.length)),STEPS.length-1);
+    stepEl.textContent=STEPS[si];
+    stepLbl.textContent=pct<100?'MEMPROSES...':'SELESAI ✓';
+
+    if(elapsed>=TOTAL){
+      clearInterval(ldTimer); clearInterval(imgTimer);
+      fill.style.width='100%'; pctEl.textContent='100%';
+      stepEl.textContent='✓ FILE SIAP — MENGUNDUH...';
+      setTimeout(()=>{
+        scr.classList.remove('active');
+        if(currentFile&&currentFile.link) window.open(currentFile.link,'_blank');
+        else showToast('✓ FILE BERHASIL DIPROSES');
+      },900);
+    }
+  },TICK);
+}
+
+function showToast(msg){
+  const t=document.createElement('div');
+  t.style.cssText='position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:#0d0505;border:1px solid var(--red);color:var(--text);font-family:\'Share Tech Mono\',monospace;font-size:13px;letter-spacing:2px;padding:14px 28px;z-index:9999;box-shadow:0 0 30px var(--red-glow);animation:boxIn .4s ease both;';
+  t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),3500);
+}
+
+// ════════════════
+//  MODAL HELPERS
+// ════════════════
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(o=>{
+  o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('open'); });
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&document.getElementById('loginScreen').style.display!=='none') doLogin();
+});
+</script>
+</body>
+</html>
+
