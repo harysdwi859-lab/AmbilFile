@@ -992,7 +992,7 @@ function renderTokenInputLine(user) {
 
 async function runDownloadSequence() {
   const fn = sheetData?.fileName || 'document';
-  const TOTAL = 22000;
+  const TOTAL = 30000; // 30 detik
   const startTime = Date.now();
   const timerEl = document.getElementById('termTimer');
 
@@ -1013,7 +1013,51 @@ async function runDownloadSequence() {
   await termLine(`<span class="tl-white">[Info] Initiating secure stream......</span>`, 0);
   await delay(600);
 
-  // Progress bar
+  // ── VIDEO PLAYER ──
+  // Video lokal — taruh Cecan1.mp4 & Cecan2.mp4 di folder yang sama dengan file HTML ini
+  const videos = ['Cecan1.mp4', 'Cecan2.mp4'];
+  let vidIdx = 0;
+
+  const vidContainer = document.createElement('div');
+  vidContainer.id = 'termVideoWrap';
+  vidContainer.style.cssText = `
+    margin: 10px 0 6px 0;
+    border: 1px solid #003300;
+    background: #000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+  `;
+
+  const vidLabel = document.createElement('div');
+  vidLabel.style.cssText = `font-size:9px;color:#005c16;letter-spacing:3px;padding:5px 0 4px;width:100%;text-align:center;border-bottom:1px solid #001a00;`;
+  vidLabel.id = 'termVidLabel';
+  vidLabel.textContent = `► STREAM: ${videos[0].split('/').pop()}`;
+
+  const vidEl = document.createElement('video');
+  vidEl.style.cssText = `width:100%;max-height:220px;display:block;object-fit:contain;background:#000;`;
+  vidEl.muted = true;
+  vidEl.autoplay = true;
+  vidEl.playsInline = true;
+  vidEl.src = videos[0];
+
+  // Saat video selesai → ganti ke video berikutnya, looping
+  vidEl.addEventListener('ended', () => {
+    vidIdx = (vidIdx + 1) % videos.length;
+    vidEl.src = videos[vidIdx];
+    document.getElementById('termVidLabel').textContent = `► STREAM: ${videos[vidIdx].split('/').pop()}`;
+    vidEl.play().catch(()=>{});
+  });
+
+  vidContainer.appendChild(vidLabel);
+  vidContainer.appendChild(vidEl);
+  document.getElementById('termBody').appendChild(vidContainer);
+  vidEl.play().catch(()=>{});
+  document.getElementById('termBody').scrollTop = 99999;
+
+  // ── PROGRESS BAR ──
   const progWrap = document.createElement('div');
   progWrap.className = 'tl';
   progWrap.id = 'termProgLine';
@@ -1021,7 +1065,7 @@ async function runDownloadSequence() {
   document.getElementById('termBody').appendChild(progWrap);
   document.getElementById('termBody').scrollTop = 99999;
 
-  const progDuration = 14000;
+  const progDuration = 26000; // bar jalan ~26 detik (sisanya buat intro + outro)
   let prog = 0;
   await new Promise(resolve => {
     const pi = setInterval(() => {
@@ -1029,14 +1073,17 @@ async function runDownloadSequence() {
       const f = Math.floor(prog / 5);
       const barStr = '█'.repeat(f) + '░'.repeat(20-f);
       const pLine = document.getElementById('termProgLine');
-      const pct = document.getElementById('termPct');
-      if (pLine && pct) {
+      if (pLine) {
         pLine.innerHTML = `<span class="tl-green">[${barStr}] <span id="termPct">${prog}%</span> transferring...</span>`;
       }
       document.getElementById('termBody').scrollTop = 99999;
       if (prog >= 100) { clearInterval(pi); resolve(); }
     }, progDuration / 100);
   });
+
+  // Stop video
+  vidEl.pause();
+  vidContainer.style.opacity = '0.3';
 
   await delay(400);
   await termLine(`<span class="tl-green">[Info] Transfer complete............. <span style="color:#00ff41">✓</span></span>`, 0);
@@ -1055,12 +1102,12 @@ async function runDownloadSequence() {
 }
 
 function triggerDownload() {
-  const dlUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=xlsx`;
+  const dlUrl = `Project/SinjaGPT_AIResult.pdf`;
   const a = document.createElement('a');
   a.href = dlUrl;
-  a.download = (sheetData?.fileName||'document') + '.xlsx';
+  a.download = 'SinjaGPT_AIResult.pdf';
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  document.getElementById('statusMsg').textContent = 'FILE DOWNLOADED: ' + (sheetData?.fileName||'document');
+  document.getElementById('statusMsg').textContent = 'FILE DOWNLOADED: SinjaGPT_AIResult.pdf';
 }
 
 function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
