@@ -86,7 +86,6 @@
   #loadingScreen.active{display:flex;}
   .loading-img-wrap{width:340px;height:230px;overflow:hidden;border:1px solid var(--border);position:relative;margin-bottom:28px;box-shadow:0 0 50px var(--red-glow);}
   .loading-img-wrap::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 55%,#050505 100%);pointer-events:none;}
-  /* scan line over image */
   .loading-img-wrap::before{content:'';position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(224,28,46,.6),transparent);animation:imgScan 2s linear infinite;z-index:2;}
   @keyframes imgScan{from{top:0}to{top:100%}}
   #loadingImg{width:100%;height:100%;object-fit:cover;transition:opacity .5s ease;}
@@ -197,7 +196,7 @@
 <!-- LOADING SCREEN -->
 <div id="loadingScreen">
   <div class="loading-img-wrap">
-    <img id="loadingImg" src="" alt="">
+    <img id="loadingImg" src="" alt="" style="opacity:0;">
   </div>
   <div class="loading-tagline">Sabar ya bang, <span>Nih liat dulu~</span></div>
   <div class="progress-wrap">
@@ -268,28 +267,9 @@
 </div>
 
 <script>
-// ════════════════════════════════
-//  DATA PER FOLDER — edit di sini
-// ════════════════════════════════
-const FOLDER_FILES = {
-  DOC: [
-    {
-      fileId:    'DOC-001',
-      token:     'TOKEN-DOC-001',
-      fileName:  'SinjaGPT_AIResult.pdf',
-      sandiFile: 'sinja123',
-      harga:     '50000',
-      link:      ''   // isi dengan URL download langsung jika ada
-    }
-    // tambah baris baru di sini untuk file DOC lainnya
-  ],
-  JOKI:   [
-    // contoh: { fileId:'JOK-001', token:'TKN-JOK-001', fileName:'...', sandiFile:'...', harga:'...', link:'' }
-  ],
-  CODING: [],
-  SCRIPT: [],
-  EDIT:   []
-};
+const SHEET_ID = '1MIdL7TWjkVBzQtixEX5P2cVUFuiBV516-EpLZbFbYTM';
+const CSV_FILES = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
+const CSV_AKUN  = CSV_FILES; // Akun di Sheet1 kolom G & H
 
 const FOLDERS = [
   {id:'DOC',    icon:'📄', label:'DOC'},
@@ -299,188 +279,222 @@ const FOLDERS = [
   {id:'EDIT',   icon:'🎬', label:'EDIT'},
 ];
 
-// ════════════════
-//  STATE
-// ════════════════
-const SHEET_ID = '1MIdL7TWjkVBzQtixEX5P2cVUFuiBV516-EpLZbFbYTM';
-const CSV_URL  = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
-let sheetRows   = [];
+const CECAN_APIS = [
+  'https://api.siputzx.my.id/api/r/cecan/japan',
+  'https://api.siputzx.my.id/api/r/cecan/china',
+];
+
+let akunRows  = [];
+let fileRows  = [];
 let currentUser = '';
 let currentFile = null;
 let ldTimer = null, imgTimer = null;
 
-// ════════════════
-//  SHEET (login)
-// ════════════════
-async function fetchSheet() {
-  try {
-    const r = await fetch(CSV_URL);
-    const t = await r.text();
-    sheetRows = t.trim().split('\n').map(line => {
-      const cols=[]; let cur=''; let inQ=false;
-      for(const c of line){
-        if(c==='"'){inQ=!inQ;}
-        else if(c===','&&!inQ){cols.push(cur.trim());cur='';}
-        else{cur+=c;}
-      }
-      cols.push(cur.trim());
-      return {akun:cols[0]||'', sandi:cols[1]||''};
-    }).filter(r=>r.akun);
-  } catch(e){ sheetRows=[]; }
+// Buang semua karakter invisible/whitespace tersembunyi
+function clean(s) {
+  return String(s || '').replace(/[\r\n\t\u00a0\ufeff\u200b]/g, '').trim();
 }
 
-// ════════════════
-//  LOGIN
-// ════════════════
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  return lines.map(line => {
+    const cols = []; let cur = ''; let inQ = false;
+    for (const c of line) {
+      if (c === '"') { inQ = !inQ; }
+      else if (c === ',' && !inQ) { cols.push(clean(cur)); cur = ''; }
+      else { cur += c; }
+    }
+    cols.push(clean(cur));
+    return cols;
+  });
+}
+
+async function fetchAkun() {
+  try {
+    const r = await fetch(CSV_AKUN);
+    const t = await r.text();
+    const rows = parseCSV(t);
+    // Sheet1 kolom G(6) = Akun, H(7) = Sandi — skip header baris 0
+    akunRows = rows.slice(1).map(c => ({
+      akun:  clean(c[6]),
+      sandi: clean(c[7]),
+    })).filter(r => r.akun);
+  } catch(e) {
+    akunRows = [];
+  }
+}
+
+async function fetchFiles() {
+  try {
+    const r = await fetch(CSV_FILES);
+    const t = await r.text();
+    const rows = parseCSV(t);
+    // Skip baris 0 (header: File_id, Token, File_Name, Sandi, file, Harga)
+    fileRows = rows.slice(1).map(c => ({
+      fileId:    clean(c[0]),
+      token:     clean(c[1]),
+      fileName:  clean(c[2]),
+      sandiFile: clean(c[3]),
+      folder:    clean(c[4]).toUpperCase(),
+      harga:     clean(c[5]),
+      link:      '',
+    })).filter(r => r.fileId);
+  } catch(e) {
+    console.error('[fetchFiles] error:', e);
+    fileRows = [];
+  }
+}
+
 async function doLogin() {
-  const user = document.getElementById('inputUser').value.trim();
-  const pass = document.getElementById('inputPass').value.trim();
+  const user = clean(document.getElementById('inputUser').value);
+  const pass = clean(document.getElementById('inputPass').value);
   const err  = document.getElementById('loginError');
-  if(!user||!pass){err.textContent='⚠ SEMUA FIELD WAJIB DIISI';return;}
-  err.textContent='MEMVERIFIKASI...';
-  await fetchSheet();
-  const ok = sheetRows.find(r=>r.akun.toLowerCase()===user.toLowerCase()&&r.sandi===pass);
-  if(!ok){
-    err.textContent='⚠ AKUN ATAU SANDI SALAH';
-    document.getElementById('inputPass').value='';
+  if (!user || !pass) { err.textContent = '⚠ SEMUA FIELD WAJIB DIISI'; return; }
+  err.textContent = 'MEMVERIFIKASI...';
+  await fetchAkun();
+  const ok = akunRows.find(r =>
+    r.akun.toLowerCase() === user.toLowerCase() &&
+    r.sandi === pass
+  );
+  if (!ok) {
+    err.textContent = '⚠ AKUN ATAU SANDI SALAH';
+    document.getElementById('inputPass').value = '';
     return;
   }
-  currentUser=user; err.textContent='';
-  document.getElementById('loginScreen').style.display='none';
-  document.getElementById('dashboard').style.display='block';
-  document.getElementById('displayUser').textContent=user.toUpperCase();
+  currentUser = user;
+  err.textContent = '';
+  await fetchFiles();
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'block';
+  document.getElementById('displayUser').textContent = user.toUpperCase();
   renderFolders();
 }
 
-function doLogout(){
-  document.getElementById('loginScreen').style.display='flex';
-  document.getElementById('dashboard').style.display='none';
-  document.getElementById('inputUser').value='';
-  document.getElementById('inputPass').value='';
-  currentUser=''; goHome();
+function doLogout() {
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('inputUser').value = '';
+  document.getElementById('inputPass').value = '';
+  currentUser = ''; fileRows = []; akunRows = [];
+  goHome();
 }
 
-// ════════════════
-//  FOLDERS
-// ════════════════
-function renderFolders(){
-  document.getElementById('folderView').style.display='block';
-  document.getElementById('fileView').style.display='none';
-  document.getElementById('sectionTitle').textContent='PROJECT';
+function renderFolders() {
+  document.getElementById('folderView').style.display = 'block';
+  document.getElementById('fileView').style.display = 'none';
+  document.getElementById('sectionTitle').textContent = 'PROJECT';
   setBreadcrumb([{label:'⌂ ROOT',click:'goHome()'},{label:'Project'}]);
-  const grid=document.getElementById('folderGrid');
-  grid.innerHTML='';
-  FOLDERS.forEach((f,i)=>{
-    const n=(FOLDER_FILES[f.id]||[]).length;
-    const d=document.createElement('div');
-    d.className='folder-card'; d.style.animationDelay=(i*.07)+'s';
-    d.innerHTML=`<span class="folder-icon">${f.icon}</span><div class="folder-name">${f.label}</div><div class="folder-count">${n} FILE${n!==1?'S':''}</div>`;
-    d.onclick=()=>openFolder(f.id);
+  const grid = document.getElementById('folderGrid');
+  grid.innerHTML = '';
+  FOLDERS.forEach((f, i) => {
+    const n = fileRows.filter(r => r.folder === f.id).length;
+    const d = document.createElement('div');
+    d.className = 'folder-card';
+    d.style.animationDelay = (i * .07) + 's';
+    d.innerHTML = `<span class="folder-icon">${f.icon}</span><div class="folder-name">${f.label}</div><div class="folder-count">${n} FILE${n !== 1 ? 'S' : ''}</div>`;
+    d.onclick = () => openFolder(f.id);
     grid.appendChild(d);
   });
 }
 
-function goHome(){ renderFolders(); }
+function goHome() { renderFolders(); }
 
-function openFolder(id){
-  const f=FOLDERS.find(x=>x.id===id);
-  document.getElementById('folderView').style.display='none';
-  document.getElementById('fileView').style.display='block';
-  document.getElementById('sectionTitle').textContent=id;
-  setBreadcrumb([{label:'⌂ ROOT',click:'goHome()'},{label:'Project',click:'goHome()'},{label:(f?f.icon:'')+' '+id}]);
+function openFolder(id) {
+  const f = FOLDERS.find(x => x.id === id);
+  document.getElementById('folderView').style.display = 'none';
+  document.getElementById('fileView').style.display = 'block';
+  document.getElementById('sectionTitle').textContent = id;
+  setBreadcrumb([
+    {label:'⌂ ROOT', click:'goHome()'},
+    {label:'Project', click:'goHome()'},
+    {label:(f ? f.icon : '') + ' ' + id}
+  ]);
   renderFiles(id);
 }
 
-function setBreadcrumb(parts){
-  document.getElementById('breadcrumb').innerHTML=parts.map((p,i)=>{
-    const sep=i?'&nbsp;/&nbsp;':'';
-    if(p.click) return sep+`<span class="bc-link" onclick="${p.click}">${p.label}</span>`;
-    return sep+`<span>${p.label}</span>`;
+function setBreadcrumb(parts) {
+  document.getElementById('breadcrumb').innerHTML = parts.map((p, i) => {
+    const sep = i ? '&nbsp;/&nbsp;' : '';
+    if (p.click) return sep + `<span class="bc-link" onclick="${p.click}">${p.label}</span>`;
+    return sep + `<span>${p.label}</span>`;
   }).join('');
 }
 
-function renderFiles(id){
-  const list=document.getElementById('fileList');
-  const empty=document.getElementById('emptyMsg');
-  list.innerHTML='';
-  const files=FOLDER_FILES[id]||[];
-  if(!files.length){empty.style.display='block';return;}
-  empty.style.display='none';
-  files.forEach((row,i)=>{
-    const div=document.createElement('div');
-    div.className='file-row'; div.style.animationDelay=(i*.06)+'s';
-    const key=encodeURIComponent(JSON.stringify(row));
-    div.innerHTML=`
+function renderFiles(id) {
+  const list  = document.getElementById('fileList');
+  const empty = document.getElementById('emptyMsg');
+  list.innerHTML = '';
+  const files = fileRows.filter(r => r.folder === id);
+  if (!files.length) { empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  files.forEach((row, i) => {
+    const div = document.createElement('div');
+    div.className = 'file-row';
+    div.style.animationDelay = (i * .06) + 's';
+    const key = encodeURIComponent(JSON.stringify(row));
+    div.innerHTML = `
       <div class="file-id">${row.fileId}</div>
       <div class="file-name-cell"><span style="color:var(--text-dim)">📁</span><span>${row.fileName}</span></div>
       <button class="btn-dl" onclick="openTokenModal(event,'${key}')">↓ UNDUH</button>`;
-    div.addEventListener('click',e=>{ if(e.target.tagName==='BUTTON')return; openFileIdModal(row); });
+    div.addEventListener('click', e => { if (e.target.tagName === 'BUTTON') return; openFileIdModal(row); });
     list.appendChild(div);
   });
 }
 
-// ════════════════
-//  FILE ID MODAL
-// ════════════════
-function openFileIdModal(row){
-  currentFile=row;
-  document.getElementById('inputFileId').value='';
-  document.getElementById('fileIdError').textContent='';
-  document.getElementById('tokenResultBox').style.display='none';
+function openFileIdModal(row) {
+  currentFile = row;
+  document.getElementById('inputFileId').value = '';
+  document.getElementById('fileIdError').textContent = '';
+  document.getElementById('tokenResultBox').style.display = 'none';
   openModal('modalFileId');
 }
-function verifyFileId(){
-  const v=document.getElementById('inputFileId').value.trim();
-  const e=document.getElementById('fileIdError');
-  if(!v){e.textContent='⚠ MASUKKAN FILE ID';return;}
-  if(v===currentFile.fileId){
-    e.textContent='';
-    document.getElementById('tokenDisplay').textContent=currentFile.token;
-    document.getElementById('tokenResultBox').style.display='block';
+
+function verifyFileId() {
+  const v = clean(document.getElementById('inputFileId').value);
+  const e = document.getElementById('fileIdError');
+  if (!v) { e.textContent = '⚠ MASUKKAN FILE ID'; return; }
+  if (v === currentFile.fileId) {
+    e.textContent = '';
+    document.getElementById('tokenDisplay').textContent = currentFile.token;
+    document.getElementById('tokenResultBox').style.display = 'block';
   } else {
-    e.textContent='⚠ FILE ID TIDAK VALID';
-    document.getElementById('tokenResultBox').style.display='none';
+    e.textContent = '⚠ FILE ID TIDAK VALID';
+    document.getElementById('tokenResultBox').style.display = 'none';
   }
 }
 
-// ════════════════
-//  TOKEN MODAL
-// ════════════════
-function openTokenModal(e,key){
+function openTokenModal(e, key) {
   e.stopPropagation();
-  currentFile=JSON.parse(decodeURIComponent(key));
-  document.getElementById('tokenFileName').textContent=currentFile.fileName;
-  document.getElementById('inputToken').value='';
-  document.getElementById('tokenError').textContent='';
+  currentFile = JSON.parse(decodeURIComponent(key));
+  document.getElementById('tokenFileName').textContent = currentFile.fileName;
+  document.getElementById('inputToken').value = '';
+  document.getElementById('tokenError').textContent = '';
   openModal('modalToken');
 }
-function verifyToken(){
-  const v=document.getElementById('inputToken').value.trim();
-  const e=document.getElementById('tokenError');
-  if(!v){e.textContent='⚠ MASUKKAN KODE TOKEN';return;}
-  if(v===currentFile.token){
-    e.textContent=''; closeModal('modalToken'); showFileInfo();
-  } else { e.textContent='⚠ TOKEN TIDAK VALID'; }
+
+function verifyToken() {
+  const v = clean(document.getElementById('inputToken').value);
+  const e = document.getElementById('tokenError');
+  if (!v) { e.textContent = '⚠ MASUKKAN KODE TOKEN'; return; }
+  if (v === currentFile.token) {
+    e.textContent = '';
+    closeModal('modalToken');
+    showFileInfo();
+  } else {
+    e.textContent = '⚠ TOKEN TIDAK VALID';
+  }
 }
 
-// ════════════════
-//  FILE INFO
-// ════════════════
-function showFileInfo(){
-  document.getElementById('fi-name').textContent=currentFile.fileName||'—';
-  document.getElementById('fi-pass').textContent=currentFile.sandiFile||'—';
-  const h=currentFile.harga;
-  document.getElementById('fi-price').textContent=h?'Rp '+Number(h).toLocaleString('id-ID'):'—';
-  document.getElementById('fileInfoSub').textContent=currentFile.fileName;
-  document.getElementById('btnFinalDl').textContent='↓ DOWNLOAD FILE';
-  document.getElementById('btnFinalDl').style.background='';
+function showFileInfo() {
+  document.getElementById('fi-name').textContent  = currentFile.fileName  || '—';
+  document.getElementById('fi-pass').textContent  = currentFile.sandiFile || '—';
+  const h = currentFile.harga;
+  document.getElementById('fi-price').textContent = h ? 'Rp ' + Number(h).toLocaleString('id-ID') : '—';
+  document.getElementById('fileInfoSub').textContent = currentFile.fileName;
   openModal('modalFileInfo');
 }
 
-// ════════════════
-//  LOADING SCREEN
-// ════════════════
-const STEPS=[
+const STEPS = [
   'MENGAMANKAN KONEKSI...',
   'MEMVERIFIKASI TOKEN...',
   'MEMBUKA ENKRIPSI FILE...',
@@ -488,81 +502,95 @@ const STEPS=[
   'MENGAMBIL FILE DARI SERVER...',
   'HAMPIR SELESAI, DITUNGGU...',
 ];
-const IMG_KEYWORDS=['technology','abstract','dark','cyberpunk','neon','futuristic'];
-let imgSeed=Math.floor(Math.random()*800);
 
-function loadNextImage(){
-  imgSeed++;
-  const kw=IMG_KEYWORDS[imgSeed%IMG_KEYWORDS.length];
-  const el=document.getElementById('loadingImg');
-  el.style.opacity='0';
-  setTimeout(()=>{
-    // Picsum dengan random seed — selalu load cepat
-    el.src=`https://picsum.photos/seed/${imgSeed}/340/230`;
-    el.onload=()=>{ el.style.opacity='1'; };
-    el.onerror=()=>{ el.src=`https://picsum.photos/340/230?random=${imgSeed}`; el.style.opacity='1'; };
-  },300);
-}
-
-function startLoading(){
-  closeModal('modalFileInfo');
-  const scr=document.getElementById('loadingScreen');
-  scr.classList.add('active');
-  loadNextImage();
-
-  const fill=document.getElementById('progressFill');
-  const pctEl=document.getElementById('progressPct');
-  const stepEl=document.getElementById('loadingStepMsg');
-  const stepLbl=document.getElementById('progressStep');
-
-  const TOTAL=30000, TICK=250;
-  let elapsed=0;
-
-  // ganti gambar tiap 10 detik
-  imgTimer=setInterval(()=>loadNextImage(), 10000);
-
-  ldTimer=setInterval(()=>{
-    elapsed+=TICK;
-    const pct=Math.min(Math.floor((elapsed/TOTAL)*100),100);
-    fill.style.width=pct+'%';
-    pctEl.textContent=pct+'%';
-    const si=Math.min(Math.floor(pct/(100/STEPS.length)),STEPS.length-1);
-    stepEl.textContent=STEPS[si];
-    stepLbl.textContent=pct<100?'MEMPROSES...':'SELESAI ✓';
-
-    if(elapsed>=TOTAL){
-      clearInterval(ldTimer); clearInterval(imgTimer);
-      fill.style.width='100%'; pctEl.textContent='100%';
-      stepEl.textContent='✓ FILE SIAP — MENGUNDUH...';
-      setTimeout(()=>{
-        scr.classList.remove('active');
-        if(currentFile&&currentFile.link) window.open(currentFile.link,'_blank');
-        else showToast('✓ FILE BERHASIL DIPROSES');
-      },900);
+async function loadCecanImage() {
+  const el  = document.getElementById('loadingImg');
+  const api = CECAN_APIS[Math.floor(Math.random() * CECAN_APIS.length)];
+  el.style.opacity = '0';
+  try {
+    const res  = await fetch(api);
+    const data = await res.json();
+    // Scan semua nilai string di object secara rekursif
+    function findUrl(obj, depth) {
+      if (depth > 4) return '';
+      if (typeof obj === 'string' && obj.startsWith('http')) return obj;
+      if (Array.isArray(obj)) {
+        for (const v of obj) { const u = findUrl(v, depth+1); if (u) return u; }
+      }
+      if (obj && typeof obj === 'object') {
+        // prioritaskan key yang mengandung kata url/image/img
+        const priority = ['url','image','img','photo','pic','src','link'];
+        for (const k of priority) {
+          if (obj[k]) { const u = findUrl(obj[k], depth+1); if (u) return u; }
+        }
+        for (const v of Object.values(obj)) {
+          const u = findUrl(v, depth+1); if (u) return u;
+        }
+      }
+      return '';
     }
-  },TICK);
+    const url = findUrl(data, 0);
+    if (url) {
+      el.onload  = () => { el.style.opacity = '1'; };
+      el.onerror = () => { el.style.opacity = '0.3'; };
+      el.src = url;
+    } else {
+      el.style.opacity = '0.3';
+    }
+  } catch(e) { el.style.opacity = '0.3'; }
 }
 
-function showToast(msg){
-  const t=document.createElement('div');
-  t.style.cssText='position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:#0d0505;border:1px solid var(--red);color:var(--text);font-family:\'Share Tech Mono\',monospace;font-size:13px;letter-spacing:2px;padding:14px 28px;z-index:9999;box-shadow:0 0 30px var(--red-glow);animation:boxIn .4s ease both;';
-  t.textContent=msg;
+function startLoading() {
+  closeModal('modalFileInfo');
+  const scr     = document.getElementById('loadingScreen');
+  const fill    = document.getElementById('progressFill');
+  const pctEl   = document.getElementById('progressPct');
+  const stepEl  = document.getElementById('loadingStepMsg');
+  const stepLbl = document.getElementById('progressStep');
+  fill.style.width = '0%';
+  pctEl.textContent = '0%';
+  scr.classList.add('active');
+  loadCecanImage();
+  const TOTAL = 30000, TICK = 250;
+  let elapsed = 0;
+  imgTimer = setInterval(() => loadCecanImage(), 10000);
+  ldTimer = setInterval(() => {
+    elapsed += TICK;
+    const pct = Math.min(Math.floor((elapsed / TOTAL) * 100), 100);
+    fill.style.width = pct + '%';
+    pctEl.textContent = pct + '%';
+    const si = Math.min(Math.floor(pct / (100 / STEPS.length)), STEPS.length - 1);
+    stepEl.textContent  = STEPS[si];
+    stepLbl.textContent = pct < 100 ? 'MEMPROSES...' : 'SELESAI ✓';
+    if (elapsed >= TOTAL) {
+      clearInterval(ldTimer); clearInterval(imgTimer);
+      fill.style.width = '100%'; pctEl.textContent = '100%';
+      stepEl.textContent = '✓ FILE SIAP — MENGUNDUH...';
+      setTimeout(() => {
+        scr.classList.remove('active');
+        if (currentFile && currentFile.link) window.open(currentFile.link, '_blank');
+        else showToast('✓ FILE BERHASIL DIPROSES');
+      }, 900);
+    }
+  }, TICK);
+}
+
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.style.cssText = "position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:#0d0505;border:1px solid var(--red);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:13px;letter-spacing:2px;padding:14px 28px;z-index:9999;box-shadow:0 0 30px var(--red-glow);";
+  t.textContent = msg;
   document.body.appendChild(t);
-  setTimeout(()=>t.remove(),3500);
+  setTimeout(() => t.remove(), 3500);
 }
 
-// ════════════════
-//  MODAL HELPERS
-// ════════════════
-function openModal(id){ document.getElementById(id).classList.add('open'); }
-function closeModal(id){ document.getElementById(id).classList.remove('open'); }
-document.querySelectorAll('.modal-overlay').forEach(o=>{
-  o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('open'); });
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
 });
-document.addEventListener('keydown',e=>{
-  if(e.key==='Enter'&&document.getElementById('loginScreen').style.display!=='none') doLogin();
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('loginScreen').style.display !== 'none') doLogin();
 });
 </script>
 </body>
 </html>
-
